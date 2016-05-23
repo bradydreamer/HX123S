@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="#F5EFF0"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:background="#ffffff"
+        android:layout_height="@dimen/base_setting_hight">
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/syspin"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:textSize="@dimen/fontsize"
+            />
+        <EditText
+            android:id="@+id/et_systempwd"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:inputType="textPassword"
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:hint="@string/pls_input_syspin"
+            android:textSize="@dimen/fontsize"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#292425"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:background="#ffffff"
+        android:layout_height="@dimen/base_setting_hight">
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/managepin"
+            android:layout_marginStart="10dp"
+            android:textSize="@dimen/fontsize"
+            />
+        <EditText
+            android:id="@+id/et_managmentpwd"
+            android:inputType="textPassword"
+            android:layout_marginStart="10dp"
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:hint="@string/please_input_manager_password"
+            android:textSize="@dimen/fontsize"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#292425"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:background="#ffffff"
+        android:layout_height="@dimen/base_setting_hight">
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/securepin"
+            android:layout_marginStart="10dp"
+            android:textSize="@dimen/fontsize"
+            />
+        <EditText
+            android:layout_marginStart="10dp"
+            android:inputType="textPassword"
+            android:id="@+id/et_securepwd"
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:hint="@string/pls_input_securepin"
+            android:textSize="@dimen/fontsize"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#292425"
+        />
+
+
+</LinearLayout>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--终端初始值-->
+    <string name="Init_TmkIndex">1</string>     <!--终端主秘钥初始值-->
+    <string name="Init_MK">11111111</string>     <!--终端主秘钥初始值-->
+
+
+    <string name="Init_Voucherno">000001</string>     <!--流水号初始值-->
+    <string name="Init_batch">000123</string>     <!--流水号初始值-->
+    <string name="Init_MerchantName">新国都</string>     <!--商户名-->
+    <string name="Init_MerchantNameEnglish">xgd</string>     <!--商户名英语-->
+    <string name="Init_AppName">ump</string>     <!--app名称-->
+
+    <string name="Init_MerchantNo">123456789012345</string>     <!--流水号初始值-->
+    <string name="Init_TerminalNo">12345678</string>     <!--流水号初始值-->
+
+    <string name="Init_TPDU">6000000000</string>     <!--TPDU-->
+    <string name="Init_IP">172.21.1.81</string>     <!--IP-->
+    <string name="Init_Port">8000</string>     <!--TPDU-->
+    <string name="Init_TradeTimeout">60</string>     <!--交易超时时间-->
+    <string name="Init_TelOutsideNO">3</string>     <!--交易重播次数-->
+    <!--交易控制开关 1表示是。0为否-->
+    <string name="Init_IsUnsaleNedPwd">1</string>     <!--撤销输入密码-->
+    <string name="Init_IsUnsaleNedCard">1</string>     <!--撤销需要刷卡-->
+    <string name="Init_IsAutoSignout">1</string>        <!--结算后自动签退-->
+    <string name="Init_IsTakEncry">1</string>        <!--是否磁道信息加密-->
+    <string name="Init_EncryType">0</string>        <!--Mac算法加密标志-->
+    <string name="Init_privateSwitch">0</string>        <!--Mac算法加密标志-->
+
+    <!--密码-->
+    <string name="Init_Systempwd">12345678</string>        <!--系统管理员密码-->
+    <string name="Init_Managepwd">123456</string>        <!--主管密码-->
+    <string name="Init_Securepwd">0000</string>        <!--安全密码-->
+
+</resources>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="手工输入传输密钥"
+        android:id="@+id/title"
+        android:textSize="30dp"
+        android:layout_weight="0.05"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <EditText
+        android:hint="主密钥ID号："
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/PMKeyId"
+        android:layout_alignBottom="@+id/input_PMK_index"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="45dp" />
+    <EditText
+        android:hint="输入传输密钥索引号(0~9):"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/input_PMK_index"
+        android:layout_below="@+id/title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="171dp" />
+    <EditText
+        android:hint="输入传输密钥:"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/input_PMK"
+        android:layout_below="@+id/input_PMK_index"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="确认"
+        android:id="@+id/btn_ok"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="33dp"
+        android:layout_below="@+id/input_PMK"
+        android:layout_centerHorizontal="true" />
+
+
+</RelativeLayout>

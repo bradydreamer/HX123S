@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/newtransflow0519/Newtransflow0519.iml" filepath="$PROJECT_DIR$/newtransflow0519/Newtransflow0519.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hxb.iml" filepath="$PROJECT_DIR$/hxb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nexgoapp/nexgoapp.iml" filepath="$PROJECT_DIR$/nexgoapp/nexgoapp.iml" />
+    </modules>
+  </component>
+</project>

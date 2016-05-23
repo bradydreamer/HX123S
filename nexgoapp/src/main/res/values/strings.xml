@@ -1,0 +1,556 @@
+<resources>
+    <string name="app_name">NexgoApp</string>
+    <string name="action_settings">Settings</string>
+    <!-- 主界面 -->
+    <string name="aid">设置Aid</string>
+    <string name="capk">设置Capk</string>
+    <string name="login">登录</string>
+    <string name="setting">设置</string>
+    <string name="sale">消费</string>
+    <string name="comfim">确认</string>
+    <string name="cancel">取消</string>
+    <string name="signin">签到</string>
+    <string name="user_name">操作员:</string>
+    <string name="user_password">密码:</string>
+    <string name="trade_type_null">交易类型未知</string>
+    <string name="tip_no_null">不可为空</string>
+    <!--交易-->
+    <string name="trade_succeed">交易成功</string>
+    <string name="trade_failed">交易失败</string>
+    <string name="load_kek_succeed">下载主密钥成功</string>
+    <string name="load_kek_failed">下载主密钥失败</string>
+    <string name="location_succeed">初始化定位成功</string>
+    <string name="location_failed">初始化定位失败</string>
+    <string name="sale_plssignin">请先签到!</string>
+    <string name="sign_succeed">签到成功</string>
+    <string name="sign_failed">签到失败</string>
+    <string name="sign_failed_wk">下载工作密钥失败</string>
+    <string name="sale_succeed">消费成功</string>
+    <string name="sale_failed">消费失败</string>
+    <string name="unsale_succeed">撤销成功</string>
+    <string name="unsale_failed">撤销失败</string>
+    <string name="query_succeed">查询成功</string>
+    <string name="query_failed">查询失败</string>
+    <string name="refund_succeed">退货成功</string>
+    <string name="refund_failed">退货失败</string>
+    <string name="Preauth_succeed">预授权成功</string>
+    <string name="Preauth_failed">预授权失败</string>
+    <string name="Complete_succeed">预授权完成成功</string>
+    <string name="Complete_failed">预授权完成失败</string>
+    <string name="PreauthRevoke_succeed">预授权撤销成功</string>
+    <string name="PreauthRevoke_failed">预授权撤销失败</string>
+    <string name="PreauthedRevoke_succeed">预授权完成撤销成功</string>
+    <string name="PreauthedRevoke_failed">预授权完成撤销失败</string>
+
+
+    <string name="settle_succeed">结算成功</string>
+    <string name="settle_failed">结算失败</string>
+    <string name="settle_notrecord">无交易记录</string>
+    <string name="settle_querry_trans">查询交易中</string>
+
+    <string name="list_statistics_list">结算总计单</string>
+    <string name="trans_date">交易日期</string>
+    <string name="list_trans_type">类型/TYPE</string>
+    <string name="list_trans_sum">笔数/SUM</string>
+    <string name="list_trans_amt">金额/AMT</string>
+    <string name="list_trans_indebit">借记/SALE(内卡)</string>
+    <string name="list_trans_incredit">贷记/SALE(内卡)</string>
+    <string name="list_trans_outdebit">借记/SALE(外卡)</string>
+    <string name="list_trans_outcredit">贷记/SALE外卡)</string>
+    <string name="list_trans_total">总计/TOTAL</string>
+
+
+    <!-- 模块 提示-->
+    //输金额
+    <string name="amount">金额</string>
+    <string name="swipe_all_card">请刷卡/插卡或挥卡</string>
+    <string name="pls_insert_icc">请使用IC卡</string>
+    <string name="err">出错了!</string>
+    <string name="succ">成功</string>
+
+    //确认卡号
+    <string name="unit_cn">元</string>
+    <string name="card_no">卡号</string>
+    <string name="pay_confirm">请确认卡号正确？</string>
+    <string name="pls_input_pin">请输入密码</string>
+    <string name="pin_error">密码错误</string>
+
+    <string name="lefe_time">剩余次数</string>
+    <string name="cer_virify">证件校验</string>
+    <string name="cer">证件</string>
+    <string name="info">信息</string>
+    <!--打印-->
+    <string name="print_printing">打印中...</string>
+    <string name="print_plswait">请不要进行其它操作</string>
+    <string name="print_plstearoff">请撕纸</string>
+    <string name="print_lackpapper">打印机缺纸</string>
+    <string name="print_lacktip">请装上纸后按确定重打</string>
+    <string name="print_deviceerr">打印机故障</string>
+    <string name="print_err">打印出错了!</string>
+    <string name="print_othererr">其它错误</string>
+    <string name="print_OK">确定</string>
+    <string name="print_CANCEL">取消</string>
+
+
+    <!-- 通讯-->
+    <string name="err_connect_service">连接服务失败</string>
+    <string name="succ_connect_service">连接服务成功</string>
+    <string name="err_socket_timeout">连接/接收超时</string>
+    <string name="err_socket_closed">服务器断开连接</string>
+    <string name="err_socket_connect_fail">连接失败</string>
+    <string name="commu_trade">交易进行中...</string>
+    <string name="commu_send">正在发送...</string>
+    <string name="commu_recv">正在接收...</string>
+    <string name="commu_connect">正在连接中...</string>
+    <string name="commu_recverr">接收超时</string>
+    <string name="commu_err">通讯出错</string>
+
+    <string name="exchangeBag_err">和华夏sdk报文交换失败</string>
+    <!-- -->
+    <!--<参数 设置>-->
+    <string name="pls_input_syspin">请输入系统管理员密码</string>
+    <string name="syspin">系统管理员密码</string>
+    <string name="pls_input_securepin">请输入安全密码</string>
+    <string name="securepin">安全密码</string>
+    <string name="pls_input_managepin">请输入主管密码</string>
+    <string name="managepin">主管密码</string>
+    <string name="Comcontrol">通讯开关控制</string>
+    <string name="pref_header_business">商户管理设置</string>
+    <string name="pref_title_merchant_name_input">商户名称</string>
+    <string name="pref_title_merchantno_input">商户号</string>
+    <string name="pref_title_terminalno_input">终端号</string>
+
+    <string name="pref_header_net">网络参数设置</string>
+    <string name="pref_title_tpdu_input">TPDU</string>
+    <string name="pref_title_ip_input">服务器地址</string>
+    <string name="pref_title_port_input">服务器端口</string>
+
+    <string name="pref_header_system">系统参数设置</string>
+    <string name="pref_title_voucherno_input">流水号</string>
+    <string name="pref_title_batchno_input">批次号</string>
+
+    <string name="merchant_name_input">商户名称</string>
+    <string name="application_name">应用名称</string>
+    <string name="merchant_name_english">商户英文名</string>
+    <string name="merchantno_input">商户号</string>
+    <string name="terminalno_input">终端号</string>
+    <string name="voucherno_input">流水号</string>
+    <string name="batchno_input">批次号</string>
+    <!--<string name="pref_title_ip_input">服务器地址</string>-->
+    <string name="PrivateNetway">专网通道</string>
+    <string name="IsSupportTelnet">支持拨号</string>
+    <string name="IsSupportSerial">支持串口</string>
+    <string name="IsSupportGprs">支持以太网</string>
+    <string name="IsSupportCDMA">支持CDMA</string>
+    <string name="IsSupportEther">支持以太网</string>
+    <string name="IsPredial">预拨号</string>
+    <string name="TradeTimeout">交易超时时间</string>
+    <string name="TelOutsideNO">交易重拔次数</string>
+    <string name="TelCenterTradeNO1">中心交易号码 1</string>
+    <string name="TelCenterTradeNO2">中心交易号码 2</string>
+    <string name="TelCenterTradeNO3">中心交易号码 3</string>
+    <string name="GprsInsertNO">接入号码</string>
+    <string name="GprsAPN1Name">APN1名称</string>
+    <string name="GprsHost1IPAdr">主机 1 IP 地址</string>
+    <string name="GprsHost1Port">主机 1 端口</string>
+    <string name="GprsHost2IPAdr">主机 2 IP 地址</string>
+    <string name="GprsHost2Port">主机 2 端口</string>
+    <string name="GprsIsUserSetting">用户名设置</string>
+    <!--终端秘钥管理-->
+    <string name="pref_header_KeySetting">终端密钥管理</string>
+    <string name="TerminalKeyIndex">终端秘钥索引</string>
+    <string name="TAKNULL">终端秘钥索引空</string>
+    <string name="IsTakEncry">磁道信息是否加密</string>
+    <string name="KeyEncryControl">密钥加密控制</string>
+    <!--密钥加密控制-->
+    <string name="pref_header_possystem">POS设置</string>
+    <string name="SecurePwd">安全密码</string>
+    <string name="MaxRefundAmount">最大退货金额</string>
+    <string name="MK">手输主秘钥</string>
+
+    <string name="pref_header_TradeSetting">交易管理设置</string>
+
+    <string name="MK_Algorithm">设置秘钥算法</string>
+
+    <string name="DefaultTrade">默认交易设置</string>
+    <string-array name="DefaultTrade_titles">
+        <item>消费</item>
+        <item>预授权</item>
+    </string-array>
+    <string-array name="DefaultTrade_values">
+        <item>00</item>
+        <item>01</item>
+    </string-array>
+    <!--密码管理设置-->
+    <string name="pref_header_PwdSetting">密码管理设置</string>
+
+    <string name="SaleRevokeNeedCard">消费撤销刷卡</string>
+    <string name="SaleRevokeNeedPwd">消费撤销输密</string>
+    <string name="PreauthCompleteRevokeNeedCard">预授权完成撤销刷卡</string>
+    <string name="PreauthCompleteRevokeNeedPwd">预授权完成撤销输密</string>
+    <string name="PreauthRevokeNeedPwd">预授权撤销输密</string>
+    <string name="PreauthCompleteNeedPwd">预授权完成（请求）输密</string>
+    <string name="SettlePrintDetailSetting">结算打印明细设置</string>
+    <string name="EnglishSetting">英文设置(热敏有效)</string>
+    <string name="VoucherSetting">签购单设置（针打有效）</string>
+    <string name="VoucherTitleSetting">签购单抬头设置</string>
+    <string name="button10">结  算</string>
+    <!--"其他功能设置"-->
+    <string name="pref_header_otherSetting">"其他功能设置"</string>
+    <string name="clearItem">清除菜单</string>
+    <string name="clear_voucher">"清除流水"</string>
+    <string name="Isclear_voucher">"确定清除流水么？"</string>
+    <string name="clear_Reveral">"清除冲正"</string>
+    <string name="Isclear_Reveral">"确定清除冲正么？"</string>
+    <string name="DB_AlreadyClean">"数据库已经清空"</string>
+    <string name="Error_deleteDB">"删除数据库出错"</string>
+    <string name="Success_deleteDB">"删除数据库成功"</string>
+    <string name="Success_deleteReveral">"清除冲正成功"</string>
+
+    <string name="dlitem">下载菜单</string>
+    <string name="dlAID">"下载AID"</string>
+    <string name="dlMK">"下载公钥"</string>
+    <string name="printitem">"打印菜单"</string>
+    <string name="printpaperNo">"打印联数"</string>
+    <string name="PlsInput_printpaperNo">请输入打印联数</string>
+
+    <!--"电子签名设置"-->
+    <string name="pref_header_ElecSignSetting">"电子签名设置"</string>
+
+    <!--通用预设值标签-->
+    <string name="FF8000">FF8000</string>
+    <!--交易电话号码1-->
+    <string name="FF8001">FF8001</string>
+    <!--交易电话号码2-->
+    <string name="FF8002">FF8002</string>
+    <!--交易电话号码3-->
+    <string name="FF8003">FF8003</string>
+    <!--外线号码-->
+    <string name="FF8004">FF8004</string>
+    <!--APN1名称-->
+    <string name="FF8005">FF8005</string>
+    <!--APN2名称-->
+    <string name="FF8006">FF8006</string>
+    <!--GPRS接入服务器参数-->
+    <string name="FF8007">FF8007</string>
+    <!--CDMA接入服务器参数-->
+    <string name="FF8008">FF8008</string>
+    <!--预拨号标识-->
+    <string name="FF8009">FF8009</string>
+    <!--IP接入服务器参数-->
+    <string name="FF8010">FF8010</string>
+    <!--MAC算法标志-->
+    <string name="FF8011">FF8011</string>
+    <!--TPDU-->
+    <string name="FF8015">FF8015</string>
+    <!--磁道信息加密标志-->
+    <string name="FF8016">FF8016</string>
+    <!--终端密钥索引-->
+    <string name="FF8017">FF8017</string>
+    <!--加密算法标志-->
+    <string name="FF8018">FF8018</string>
+    <!--商户名称-->
+    <string name="FF803A">FF803A</string>
+    <!--闪卡当笔重刷处理时间-->
+    <string name="FF803C">FF803C</string>
+    <!--闪卡有效生命时间-->
+    <string name="FF8054">FF8054</string>
+    <!--非接快速业务标识-->
+    <string name="FF8055">FF8055</string>
+    <!--BIN表A标识-->
+    <string name="FF8056">FF8056</string>
+    <!--BIN表B标识-->
+    <string name="FF8057">FF8057</string>
+    <!--CDCVM标识-->
+    <string name="FF8058">FF8058</string>
+    <!--非接快速业务（QPS）免密限额-->
+    <string name="FF8059">FF8059</string>
+    <!--免签限额-->
+    <string name="FF805A">FF805A</string>
+    <!--免签标识-->
+    <string name="FF8046">FF8046</string>
+    <!--自动签退标识-->
+
+    <!--交易过程数据标签-->
+    <string name="FF9000">FF9000</string>
+    <!--交易类型码-->
+    <string name="FF9001">FF9001</string>
+    <!--卡号-->
+    <string name="FF9002">FF9002</string>
+    <!--交易金额-->
+    <string name="FF9003">FF9003</string>
+    <!--流水号-->
+    <string name="FF9004">FF9004</string>
+    <!--受卡方所在地时间-->
+    <string name="FF9005">FF9005</string>
+    <!--受卡方所在地日期-->
+    <string name="FF9006">FF9006</string>
+    <!--卡有效期-->
+    <string name="FF9007">FF9007</string>
+    <!--签到状态-->
+    <string name="FF9008">FF9008</string>
+    <!--支付方式（服务点输入方式码)-->
+    <string name="FF900A">FF900A</string>
+    <!--卡序列号-->
+    <string name="FF900D">FF900D</string>
+    <!--二磁信息-->
+    <string name="FF900E">FF900E</string>
+    <!--三磁信息-->
+    <string name="FF900F">FF900F</string>
+    <!--检索参考号-->
+    <string name="FF9010">FF9010</string>
+    <!--应答码-->
+    <string name="FF9011">FF9011</string>
+    <!--终端编号-->
+    <string name="FF9012">FF9012</string>
+    <!--商户编号-->
+    <string name="FF901B">FF901B</string>
+    <!--交易货币代码-->
+    <string name="FF901E">FF901E</string>
+    <!--账户类型-->
+    <string name="FF901F">FF901F</string>
+    <!--授权码-->
+    <string name="FF9020">FF9020</string>
+    <!--余额符号-->
+    <string name="FF9021">FF9021</string>
+    <!--余额-->
+    <string name="FF9022">FF9022</string>
+    <!--批次号-->
+    <string name="FF9026">FF9026</string>
+    <!--支持部分扣款和返回余额的标志-->
+    <string name="FF9027">FF9027</string>
+    <!--原交易卡号-->
+    <string name="FF9028">FF9028</string>
+    <!--原交易批次号-->
+    <string name="FF9029">FF9029</string>
+    <!--原交易流水号-->
+    <string name="FF902A">FF902A</string>
+    <!--原交易日期-->
+    <string name="FF902D">FF902D</string>
+    <!--IC卡数据域、手机芯片专用子域-->
+    <string name="FF9041">FF9041</string>
+    <!--操作员代码-->
+    <string name="FF9045">FF9045</string>
+    <!--MAC-->
+    <string name="FF9050">FF9050</string>
+    <!--交易冲正标识-->
+    <string name="FF9051">FF9051</string>
+    <!--一磁信息-->
+    <string name="FF9054">FF9054</string>
+    <!--原交易终端号-->
+    <string name="FF9055">FF9055</string>
+    <!--设备序列号-->
+    <string name="FF901C">FF901C</string>
+    <!--个人标识码-->
+    <string name="FF901A">FF901A</string>
+    <!--外卡交易总笔数-->
+    <string name="FF9015">FF9015</string>
+    <!--对账结果-->
+    <string name="FF9013">FF9013</string>
+    <!--发卡机构信息-->
+    <string name="FF9014">FF9014</string>
+    <!--收单机构信息-->
+    <string name="FF9016">FF9016</string>
+    <!--外卡结算总额-->
+    <string name="FF9017">FF9017</string>
+    <!--内卡结算总额-->
+    <string name="FF9018">FF9018</string>
+    <!--交易明细总笔数-->
+    <string name="FF9019">FF9019</string>
+    <!--内卡交易总笔数-->
+    <string name="FF9023">FF9023</string>
+    <!--网络管理信息码-->
+    <string name="FF9024">FF9024</string>
+    <!--终端读取能力-->
+    <string name="FF9025">FF9025</string>
+    <!--IC卡条件代码-->
+    <string name="FF9032">FF9032</string>
+    <!--账户类型-->
+    <string name="FF9030">FF9030</string>
+    <!--发送报文-->
+    <string name="FF9031">FF9031</string>
+    <!--接收报文-->
+    <string name="FF9033">FF9033</string>
+    <!--签购单打印完成标识-->
+    <string name="MessageFrame">"MessageFrame"</string>
+    <!--报文类型-->
+    <string name="Tips">Tips</string>
+    <!--小费-->
+    <string name="Default"> </string>
+    <!--默认值-->
+
+    <!--交易ID定义-->
+    <!--联机下载主密钥-->
+    <string name="DownLoadPrimaryKeyID">trade_id_downloadPrimaryKey</string>
+    <!--初始定位-->
+    <string name="LocateID">trade_id_locate</string>
+    <!--签到-->
+    <string name="SignInID">trade_id_signin</string>
+    <!--消费-->
+    <string name="SaleID">trade_id_sale</string>
+    <!--查询-->
+    <string name="QueryID">trade_id_query</string>
+    <string name="query">查询</string>
+    <!--结算-->
+    <string name="SettleID">trade_id_settle</string>
+    <string name="settle">结算</string>
+    <string name="UnQueryID">trade_id_unsale</string>
+    <string name="consume_cancel">消费撤销</string>
+    <!--消费撤销-->
+    <string name="RefundID">trade_id_refund</string>
+    <string name="refund">退货</string>
+    <!--退货-->
+    <string name="ReversalID">trade_id_Reversal</string>
+    <string name="reversal">冲正</string>
+    <!--冲正-->
+    <string name="ICParamID">trade_id_ICParamID</string>
+    <string name="ic_params_download">IC参数下载</string>
+    <!--IC参数下载-->
+    <string name="Preauth">trade_id_preauth</string>
+    <!--预授权-->
+    <string name="Unpreauth">trade_id_unpreauth</string>
+    <!--预授权撤销-->
+    <string name="Complete">trade_id_complete</string>
+    <!--预授权完成请求-->
+    <string name="Uncomplete">trade_id_uncomplete</string>
+    <!--预授权完成撤销-->
+    <string name="Offcomplete">trade_id_Offcomplete</string>
+    <!--预授权完成通知-->
+
+
+    <!--系统设置提示语-->
+    <string name="already_last_page">已经是最后一页</string>
+    <string name="already_first_page">已经是第一页</string>
+    <string name="VoucherNo_is_six">流水号为6位数字</string>
+    <string name="PleaseInput_Voucher">请输入流水号</string>
+    <string name="PleaseInput_Batch">请输入批次号</string>
+    <string name="PleaseInput_IP">请选择并输入IP</string>
+    <string name="PleaseInput_Port">请选择并输入端口号</string>
+
+    <string name="PleaseInput_TermNo">请输入终端号</string>
+    <string name="PleaseInput_MerchtNo">请输入商户号</string>
+    <string name="PleaseInput_AppName">请输入应用名称</string>
+    <string name="PleaseInput_MerchName">请输入商户名称</string>
+    <string name="PleaseInput_MerchEngName">请输入商户英文名</string>
+    <string name="PleaseInput_KeyIndex">请输入秘钥索引</string>
+    <string name="PleaseInput_Tpdu">请输入TPDU</string>
+    <string name="PleaseInput_TMK">请输入主密钥</string>
+    <string name="NotSupport">暂不支持</string>
+    <string name="please_input_keeper_password">请输入管理员密码</string>
+
+    <string name="please_input_manager_password">请输入主管密码</string>
+    <string name="manager_password_isnotright">主管密码错误</string>
+    <string name="keeper_password_isnotright">管理员密码错误</string>
+
+    <string name="password_isnot_right">密码错误</string>
+    <string name="please_input_old_transdate">请输入原交易日期</string>
+    <string name="please_input_valid_date">请输入有效日期</string>
+    <string name="please_input_old_authcode">请输入原授权码</string>
+    <string name="please_input_old_voucherno">请输入原交易凭证号</string>
+    <string name="please_input_old_authcode_tip">请输入6位原授权码</string>
+    <string name="please_input_six_voucherno">请输入6位交易凭证号</string>
+    <string name="please_input_oldtrans_referno">请输入原交易参考号</string>
+    <string name="please_input_twelve_referno">请输入12位交易参考号</string>
+
+    <string name="without_transaction_flow">没有查到交易流水</string>
+    <string name="rmb">元</string>
+    <string name="transdetail">交易详情</string>
+    <string name="translist">交易明细</string>
+
+
+    <string name="pleaseinput_refund_amount">请输入退货金额</string>
+    <string name="refund_amount">退货金额:</string>
+
+    <string name="button_confirm">确认</string>
+    <string name="date_format_hint">注:请输入原交易日期，如3月9号输入"0309"</string>
+    <string name="authcode_hint">注:请输入交易凭证上的授权码</string>
+
+    <string name="operator">操作员</string>
+    <string name="trade_kind">交易类型</string>
+    <string name="trade_time">交易时间</string>
+    <string name="revoke">撤销</string>
+    <string name="readcard">读卡</string>
+
+
+
+
+
+
+
+
+
+    <string name="repeat_print">重打印</string>
+
+    <string name="CardBalance">银行卡余额</string>
+    <string name="Save">保存</string>
+
+
+    <string name="transaction_switch_control">交易开关控制</string>
+    <string name="transaction_swipecard_control">交易刷卡控制</string>
+    <string name="void_swipecard_yesorno">撤销是否刷卡</string>
+    <string name="transcation_inputkey_control">交易输密控制</string>
+    <string name="void_inputkey_yesorno">撤销是否输密</string>
+    <string name="settle_trade_control">结算交易控制</string>
+    <string name="settled_signout">结算后自动签退</string>
+    <string name="hintornot_print_detail">是否提示打印明细</string>
+    <string name="outline_transaction_control">离线交易控制</string>
+    <string name="other_transaction_control">其他交易控制</string>
+
+
+
+    <string name="check_update">检查更新</string>
+
+    <string name="app_params_setting">应用参数设置</string>
+
+    <string name="welcome_title">欢迎使用新国都智能POS产品</string>
+
+    <!--首页标题-->
+    <string name="printed_trade_gather">打印交易汇总</string>
+    <string name="check_balance">余额查询</string>
+    <string name="preauth">预授权</string>
+    <string name="preauth_finish_request">预授权完成请求</string>
+    <string name="preauth_cancel">预授权撤销</string>
+    <string name="preauthed_cancel">预授权完成撤销</string>
+    <string name="preauthed_cancel_notice">预授权完成通知</string>
+    <string name="pleaseinput_preauth_finish_amount">请输入预授权完成金额</string>
+    <string name="pleaseinput_preauth_cancel_amount">请输入预授权撤销金额</string>
+
+    <string name="input_cardnum">手输卡号</string>
+    <string name="swipe_card">刷卡</string>
+
+    <string name="download_primarykey">联机下载主密钥</string>
+
+    <string name="begin_signing">开始签到</string>
+
+    <string name="input_amount">输入金额</string>
+
+
+    <string name="pleaseinput_trade_cardnum">请输入交易卡号</string>
+    <string name="pleaseinput_trade_cardvalidity">请输入交易卡有效期</string>
+    <string name="cardnumvalidity_hint">注:请输入卡有效期(YYMM),如无有直接按确认</string>
+
+    <string name="pleaseinput_legal_cardnum">请输入合法的交易银行卡号</string>
+
+    <string name="operate_timeout">操作超时</string>
+
+    <string name="seconds_later_gohome">秒后返回主界面</string>
+    <string name="back">返回</string>
+    <string name="trade_result">交易结果</string>
+
+    <string name="prep_page">上一页</string>
+    <string name="next_page">下一页</string>
+
+    <string name="repon">应答码</string>
+    <string name="repon_tip">无</string>
+    <string name="settling">正在结算</string>
+
+
+
+
+
+
+
+
+
+
+</resources>

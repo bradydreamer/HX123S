@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:orientation="vertical"
+              android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_marginTop="20dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText
+            android:id="@+id/et_search_revocationactivity"
+            android:layout_gravity="center_vertical"
+            android:layout_width="0dp"
+            android:inputType="number"
+            android:maxLength="6"
+            android:layout_weight="1"
+            android:hint="@string/PleaseInput_Voucher"
+            android:gravity="center"
+            android:background="@drawable/bg_edittext"
+            android:layout_height="wrap_content"/>
+        <ImageView
+            android:id="@+id/iv_search_revocationactivity"
+            android:layout_marginStart="10dp"
+            android:layout_width="40dp"
+            android:src="@mipmap/search"
+            android:layout_height="40dp"/>
+    </LinearLayout>
+    <View
+        android:layout_marginTop="20dp"
+        android:background="#1C1A1A"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"/>
+    <ListView
+        android:id="@+id/listview_voidactivity"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </ListView>
+
+
+
+
+
+</LinearLayout>

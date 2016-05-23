@@ -1,0 +1,2487 @@
+/*
+EMV数据结构解析
+AIP 2字节 应用交互特征
+	字节 1:
+		bit 8: 1 = RFU
+		bit 7: 1 = 支持SDA
+		bit 6: 1 = 支持DDA
+		bit 5: 1 = 支持持卡人认证
+		bit 4: 1 = 执行终端风险管理
+		bit 3: 1 = 支持发卡行认证
+		bit 2: RFU (0)
+		bit 1: 1 = 支持CDA
+		字节2: RFU ("00")
+			
+AFL 4字节 应用文件定位器
+    字节1:短文件标识符. SFCXXXXX
+    字节2:文件中要读取的第一个记录的记录号
+    字节3:文件中要读取的最后第一个记录的记录号
+    字节4:从第一个记录开始的用于脱机数据认证的连续记录数
+    	
+AFLNUM 1字节.记录个数
+
+TermInfo.TVR[5]	//终端验证结果
+		b8  b7  b6  b5  b4  b3  b2  b1
+	TVR[0]:		
+		1	X	x	x	x	x	x	x	未进行脱机数据认证
+		x	1	x	x	x	x	x	x	脱机静态数据认证失败
+		x	X	1	x	x	x	x	x	IC卡数据缺失
+		x	X	x	1	x	x	X	x	卡片出现在终端异常文件中
+		x	X	x	x	1	x	X	x	脱机动态数据认证失败
+		x	X	x	x	x	1	X	x	复合动态数据认证/应用密码生成失败
+		x	X	x	x	x	x	0	x	RFU
+		x	X	x	x	x	x	X	0	RFU
+	TVR[1]:
+		1	X	x	x	x	x	X	x	IC卡和终端应用版本不一致
+		x	1	x	x	x	x	X	x	应用已过期
+		x	X	1	x	x	x	X	x	应用尚未生效
+		x	X	x	1	x	x	X	x	卡片不允许所请求的服务
+		x	X	x	x	1	x	X	x	新卡
+		x	X	x	x	x	0	X	x	RFU
+		x	X	x	x	x	x	0	x	RFU
+		x	X	x	x	x	x	X	0	RFU
+	TVR[2]:
+		1	X	x	x	x	x	x	x	持卡人验证失败
+		x	1	x	x	x	x	x	x	未知的CVM
+		x	X	1	x	x	x	x	X	PIN重试次数超限
+		x	X	x	1	x	x	x	X	要求输入PIN，但密码键盘不存在或工作不正常
+		x	X	x	x	1	x	x	X	要求输入PIN，密码键盘存在，但未输入PIN
+		x	X	x	x	x	1	x	X	输入联机PIN
+		x	X	x	x	x	x	0	X	RFU
+		x	X	x	x	x	x	x	0	RFU
+	TVR[3]:
+		1	X	x	X	x	X	x	X	交易超过最低限额
+		x	1	x	X	x	X	x	X	超过连续脱机交易下限
+		x	X	1	X	x	X	x	X	超过连续脱机交易上限
+		x	X	x	1	x	X	x	X	交易被随机选择联机处理
+		x	X	x	X	1	X	x	X	商户要求联机交易
+		x	X	x	X	x	0	x	X	RFU
+		x	X	x	X	x	X	0	X	RFU
+		x	X	x	X	x	X	x	0	RFU
+	TVR[4]:
+		1	X	x	x	x	X	x	X	使用缺省TDOL
+		x	1	x	x	x	X	x	X	发卡行认证失败
+		x	X	1	x	x	X	x	X	最后一次GENERATE AC命令之前脚本处理失败
+		x	X	x	1	x	X	x	X	最后一次GENERATE AC命令之后脚本处理失败
+		x	X	x	x	0	X	x	X	RFU
+		x	X	x	x	x	0	x	X	RFU
+		x	X	x	x	x	X	0	X	RFU
+		x	X	x	x	x	X	x	0	RFU
+		
+TermInfo.TSI[2]:交易状态信息(TSI)
+	TSI[0]:
+		1	X	x	x	X	x	X	x	脱机数据认证已进行
+		x	1	x	x	X	x	X	x	持卡人验证已进行
+		x	X	1	x	X	x	X	x	卡片风险管理已进行
+		x	X	x	1	X	x	X	x	发卡行认证已进行
+		x	X	x	x	1	x	X	x	终端风险管理已进行
+		x	X	x	x	X	1	X	x	脚本处理已进行
+		x	X	x	x	X	x	0	x	RFU
+		x	X	x	x	x	x	X	0	RFU
+	TSI[1]:
+		0	X	x	x	x	X	X	x	RFU
+		x	0	x	x	x	X	X	x	RFU
+		x	X	0	x	x	X	X	x	RFU
+		x	X	x	0	x	X	X	x	RFU
+		x	X	x	x	0	X	X	x	RFU
+		x	X	x	x	x	0	X	x	RFU
+		x	X	x	x	x	X	0	x	RFU
+		x	X	x	x	x	x	X	0	RFU
+		
+CVM列表数据格式：
+	字节1-4：金额X(二进制)
+	字节5-8：金额Y(二进制)
+	字节9:(CVM CODE)
+		bit 8: 0=只有符合此规范的取值(如果不为1,说明有自定义的值)
+		bit 7: 1=如果此CVM失败,应用后续的
+			   0=如果此CVM失败,则持卡人验证失败
+		bit 6-1:
+		000000 = CVM失败处理
+		000001 = 卡片执行明文PIN核对
+		000010 = 联机加密PIN验证
+		000011 = 卡片执行明文PIN核对+签名(纸上)
+		000100 = EMV保留//V4.1修改成脱及加密的PIN核对
+		000101 = EMV保留//V4.1修改成脱机加密的PIN核对+签名
+		011110 = 签名(纸上)
+		011111 = 不需CVM
+		000110-011101 = 保留给加入的支付系统
+		100000-101111 = 保留给各自独立的支付系统
+		110000-111110 = 保留给发卡行
+		111111 = RFU
+		PBOC定义:
+		100000 = 持卡人证件出示
+	字节10(CVM Condition Code):
+		00-总是
+		01-如果是ATM现金交易
+		02-如果不是ATM现金或有人值守现金或返现交易
+		03-如果终端支持这个CVM
+		04-如果是人工值守现金交易
+		05-如果是返现交易
+		06-如果交易货币等于应用货币码并且小于X值
+		07-如果交易货币等于应用货币码并且大于X值
+		08-如果交易货币等于应用货币码并且小于Y值
+		09-如果交易货币等于应用货币码并且大于X值
+		0A-7F:RFU
+		80-FF:RFU 保留给各个支付系统
+	下一个CVM用另外2个CVM码和CVM条件字节表示		
+	
+TermInfo.TermCapab[3]//	终端性能表 程序默认为 \xE0\xF8\xC8
+	TermInfo.TermCapab[0]:字节1，卡片数据输入性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 手工键盘输入
+		X  1  X  X  X  X  X	 X 磁条
+		X  X  1  X  X  X  X	 X 接触式IC卡
+		X  X  X  0  X  X  X	 X RFU
+		X  X  X  X  0  X  X	 X RFU
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  0	 X RFU
+		X  X  X  X  X  X  X	 0 RFU
+	TermInfo.TermCapab[1]:字节2，CVM性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X IC卡明文PIN验证
+		X  1  X  X  X  X  X	 X 加密PIN联机验证
+		X  X  1  X  X  X  X	 X 签名(纸)
+		X  X  X  1  X  X  X	 X 脱机加密PIN
+		X  X  X  X  1  X  X	 X 无需CVM
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  0	 X RFU
+		X  X  X  X  X  X  X	 1 持卡人证件验证
+	TermInfo.TermCapab[2]:字节3，安全性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 静态数据认证SDA
+		X  1  X  X  X  X  X	 X 动态数据认证DDA
+		X  X  1  X  X  X  X	 X 吞卡
+		X  X  X  1  X  X  X	 X 复合数据认证/应用密码生成CDA
+		X  X  X  X  0  X  X	 X RFU
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  0	 X RFU
+		X  X  X  X  X  X  X	 0 RFU
+	
+TermInfo.TermAddCapab[5]//	附加终端性能表		
+	//默认参数：xFF\x00\xF0\xB0\x01
+	TermInfo.TermAddCapab[4]:字节1，交易类型性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 现金
+		X  1  X  X  X  X  X	 X 商品
+		X  X  1  X  X  X  X	 X 服务
+		X  X  X  1  X  X  X	 X 返现
+		X  X  X  X  1  X  X	 X 查询
+		X  X  X  X  X  1  X	 X 转帐
+		X  X  X  X  X  X  1	 X 付款
+		X  X  X  X  X  X  X	 1 管理
+	TermInfo.TermAddCapab[3]:字节2，交易类型性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 存款交易
+		X  0  X  X  X  X  X	 X RFU
+		X  X  0  X  X  X  X	 X RFU
+		X  X  X  0  X  X  X	 X RFU
+		X  X  X  X  0  X  X	 X RFU
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  0	 X RFU
+		X  X  X  X  X  X  X	 0 RFU
+	TermInfo.TermAddCapab[2]:字节3，终端数据输入性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 数字键
+		X  1  X  X  X  X  X	 X 字母和特殊字符键
+		X  X  1  X  X  X  X	 X 命令键
+		X  X  X  1  X  X  X	 X 功能键
+		X  X  X  X  0  X  X	 X RFU
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  0	 X RFU
+		X  X  X  X  X  X  X	 0 RFU
+	TermInfo.TermAddCapab[1]:字节4，终端数据输出性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 打印，给服务员
+		X  1  X  X  X  X  X	 X 打印，给持卡人
+		X  X  1  X  X  X  X	 X 显示，给服务员
+		X  X  X  1  X  X  X	 X 显示，给持卡人
+		X  X  X  X  0  X  X	 X RFU
+		X  X  X  X  X  0  X	 X RFU
+		X  X  X  X  X  X  1	 X 编码表10
+		X  X  X  X  X  X  X	 1 编码表9
+	TermInfo.TermAddCapab[0]:字节5，终端数据输出性能
+		B8 B7 B6 B5 B4 B3 B2 B1 
+		1  X  X  X  X  X  X	 X 编码表8
+		X  1  X  X  X  X  X	 X 编码表7
+		X  X  1  X  X  X  X	 X 编码表6
+		X  X  X  1  X  X  X	 X 编码表5
+		X  X  X  X  1  X  X	 X 编码表4
+		X  X  X  X  X  1  X	 X 编码表3
+		X  X  X  X  X  X  1	 X 编码表2
+		X  X  X  X  X  X  X	 1 编码表1(中文编码)
+		
+TermInfo.TermType //终端类型 系统参数为22
+	环境：					操作控制方
+					金融机构	商户	持卡人
+有服务员的：
+		仅仅联机		  11         21       --
+	有联机能力的脱机	  12		 22		  --
+		仅仅脱机		  13         23       --
+
+	自助的：
+		仅仅联机		  14         24       34
+	有联机能力的脱机	  15		 25		  35
+		仅仅脱机		  16         26       36
+备注：终端类型为'14','15','16'且具有现金支出能力(附加终端性能的字节1，“现金”位=‘1’)
+	的终端被认为是ATM，其他类型的终端都不被认作ATM]
+	
+PDOL:tag 9F38
+		指定在处理选项命令中终端送入卡片的数据,包括终端数据对象(标签和长度)
+	
+Readrecord数据用于脱机数据认证:
+	1.对于SFI从1到10的文件,记录的TAG(70)和记录长度不用于脱机数据认证处理,其他响应数据域
+	中的所有数据(SW1,SW2除外)都参与脱机数据认证
+	2.对于SFI从11到30的文件,记录的TAG(70)和记录长度用于脱机数据认证处理,因而响应数据域
+	中的所有数据(SW1,SW2除外)都参与脱机数据认证
+	3.如果TAG不是'70',则认为脱机数据认证已经执行并失败,终端必须设置TSI的"脱机数据认证已执行位"
+	以及TVR相应的"脱机静态数据认证失败位","脱机动态数据认证失败位"或"CDA失败位"
+读出cardinfo数据后检查是否包含些必须的数据:(ICCDataTable_Stored.flagm=1)
+	{"AppExpireDate",0,"\x5F\x24",255,3,1,47,1,0},	//应用失效日期
+	{"AFL",0,"\x94\x00",0,252,0,51,1,0},			//AFL文件
+	{"PAN",0,"\x5A\x00",0,10,2,357,1,0},			//主帐号
+	{"CDOL1",0,"\x8C\x00",0,252,0,390,1,0},			//CDOL1
+	{"CDOL2",0,"\x8D\x00",0,252,0,643,1,0},			//CDOL2 20
+	
+
+typedef struct {
+	BYTE ASI;  //Application Selection Indicator.0-needn't match exactly(partial match up to the length);1-match exactly
+	//应用选择指示符. = 1 指示终端上的AID与卡片上的AID是否完全匹配,(长度和内容都必须一样)
+					  = 0.部分匹配,卡片AID的前面部分与AID相同,长度可以更长
+	BYTE AIDLen;	//应用标识长度
+	BYTE AID[16];//5-16	//应用标识的内容. AID = RID (应用提供商标识)+PIX(专用应用扩展)
+	BYTE bLocalName;//If display app list using local language considerless of info in card.0-use card info;1-use local language.
+	//是否用终端的应用名称
+		= 1用终端的应用名称
+		= 0用卡的应用名称
+	BYTE AppLocalNameLen;	//终端应用名称的长度
+	BYTE AppLocalName[16];	//终端应用名称的内容
+}TERMAPP;
+
+typedef struct{
+	//BYTE* Name;
+	//BYTE  Source;//0-ICC;1-Terminal
+	BYTE  Tag[3];//Second byte '00' means only first one byte tag.add third byte to make int variable oven aligned.
+	BYTE  Len1;  //Len1>Len2: fix len with Len2;Len1<Len2 and Len2!=255: Len1<= len <=Len2; Len2=255: len=Len1+Len2
+	BYTE  Len2;
+	BYTE  bAmt;//0- non numeric;1-numeric;2-compact numric
+	unsigned int address;//var address in struct TermInfo(TERMINFO)
+	BYTE  flagM;//'1'--bit0: mandatory;bit1: SDA mandatory; bit2: DDA mandatory;
+	BYTE  bExist;//0-not presented,1-have been existed.	
+}DATAELEMENT;	//标签数据文件
+
+
+SDA:静态数据认证用到的数据对象
+	:
+	标签		长度		值							格式
+	 -			  5 		注册的应用提供商标识      	b
+	 '8F'		  1			认证中心公钥索引			b
+	 ‘90’		  Nca		发卡行公钥证书				b
+	 '92'		  Ni-Nca+36 发卡行公钥的余项(如果有)	b
+	 '9F32'		  1或3		发卡行公钥指数				b
+	 '93'		  Ni		签名的静态应用数据			b
+	 -			  变长		指明的静态数据				b
+认证时必须包含这些TAG数据.否则认为脱机认证进行了且失败.
+	静态数据认证步骤:
+		1.判断认证需要的数据是否都存在,即以上TAG都exist
+		2.由终端恢复认证中心公钥.
+		过程:根据RID和公钥索引从终端的公钥里取其中一个,如果没匹配的认为
+		脱机认证进行了且失败.
+		3.由终端恢复发卡行公钥.
+		过程:a.检查发卡行公钥证书和认证中心公钥模长度是否相同.
+			 b.用认证中心公钥对发卡证书恢复,取出证书里的数据
+			 c.检查恢复出来的数据是否正确,恢复的数据尾,数据头,证书格式,发卡
+			   行标识,证书有效期,和发卡行算法标识
+			 d.计算静态认证数据的哈希结果,并与恢复的哈希结果比较是否一致.
+			 e.将恢复数据中的发卡行公钥模部分与余部分(如果有)组合成发卡行公钥
+		4.签名静态应用数据的认证
+		终端用发卡行公钥对签名的静态应用数据恢复，并进行哈希值比较,验证签名是否正确
+		过程:a.终端检查签名静态应用数据与发卡行公钥模长度是否相同
+			 b.终端利用发卡行公钥对签名的静态应用数据进行恢复
+			 c.检查恢复数据的各项是否正确：恢复的数据尾，头，数据格式
+			 d.终端依次连接从签名静态应用数据恢复出的数据、由AFL指定的用于脱机数据认证的	
+			   记录数据、以及由静态数据认证标签列表表示的数据，并计算其哈希结果.
+			 e.将计算的哈希结果与从签名静态应用数据恢复出的哈希结果相比较，一致则SDA成功  
+具体数据格式见IC卡安全规范.
+			 
+			 
+//从发卡行公钥证书恢复数据的格式
+typedef struct{
+	BYTE DataHead;		//'6A'恢复数据头
+	BYTE CertFormat;	//'02'证书格式
+	BYTE IssuID[4];		//主帐号最左面的3-8个数(右补F)发卡行标识
+	BYTE ExpireDate[2];	//证书失效日期MMYY
+	BYTE CertSerial[3];	//证书序列号
+	BYTE HashInd;		//哈希算法标识
+	BYTE IPKAlgoInd;	//发卡行公钥算法标识
+	BYTE IPKLen;		//发卡行公钥的字节长度
+	BYTE IPKExpLen;		//发卡行公钥指数的字节长度
+	BYTE IPKLeft[212];	//发卡行公钥或公钥最左边的字节NCA-36不够右补BB
+	BYTE HashResult[20];//哈希结果
+	BYTE DataTrail;		//'BC'恢复数据结尾	
+}IPK_RECOVER;
+
+//从IC卡公钥证书恢复数据的格式
+typedef struct{
+	u8 DataHead;//'6A'		//恢复数据头
+	u8 CertFormat;//'04'	//证书格式
+	u8 AppPAN[10];			//主帐号(在右边补上'F')
+	u8 ExpireDate[2];		//MMYY证书失效日期
+	u8 CertSerial[3];		//证书序列号
+	u8 HashInd;				//哈希算法标识
+	u8 ICCPKAlgoInd;		//IC卡公钥算法标识
+	u8 ICCPKLen;			//IC卡公钥长度
+	u8 ICCPKExpLen;			//IC卡公钥指数长度
+	u8 ICCPKLeft[206];//NI-42	//IC卡公钥或IC卡公钥的最左边字节
+	u8 HashResult[20];		//哈希结果
+	u8 DataTrail;			//'BC'恢复数据结尾	
+}ICCPK_RECOVER;
+
+//从签名的静态应用数据恢复数据的格式
+typedef struct {	
+	u8 DataHead;//'6A'			//格式头'6A'
+	u8 DataFormat;//'03'		//签名数据格式'03'
+	u8 HashInd;					//哈希算法标试'01'
+	u8 DataAuthCode[2];			//数据验证代码"最后保存在9F45TAG中"
+	u8 PadPattern[222];//NI-26	//填充字节
+	u8 HashResult[20];			//结果
+	u8 DataTrail;//'BC'			//'BC'恢复数据结尾
+}SIGN_STAT_APPDATA_RECOVER;	
+
+//从签名动态应用数据恢复的数据格式
+typedef struct {
+	u8 DataHead;//'6A'
+	u8 DataFormat;//'05'
+	u8 HashInd;//'01'
+	u8 ICCDynDataLen;
+	u8 ICCDynData[223];//LDD	<NIC-25
+	u8 PadPattern[223];//NIC-LDD-25,padded with 'BB'
+	u8 HashResult[20];		
+	u8 DataTrail;//'BC'
+}SIGN_DYN_APPDATA_RECOVER;
+*/
+/*****************************************************************
+EMV 底层ICCard驱动及接口函数   2008/03/31  宋孝亮创建
+*****************************************************************/
+#ifndef _EMV_H_
+#define _EMV_H_
+
+#include "dllemvmaths.h" 
+
+#define PAYWAVECVN17SUP    (1<<2)
+
+#define ARM_ADS_GCC
+#undef ARM_ADS_GCC
+
+#define EMV_LEVEL2TEST    		//EMVLEVEL2送检程序编译开关
+//#undef  EMV_LEVEL2TEST			
+
+
+extern void uart_printf(char *fmt,...);
+#ifdef ARM_ADS_GCC
+extern void printf(char *fmt,...); 
+#define ATTRIBUTE 
+#else
+#define ATTRIBUTE __attribute__((packed))
+//#define printf uart_printf
+#endif
+
+
+#ifndef TEMPTEST
+//#define TEMPTEST
+#endif
+
+//#define HX_DEBUG
+#ifndef SXL_DEBUG
+//#define SXL_DEBUG
+#endif
+//#define TESTREADCARDTIME
+#ifndef SXL_DEBUG1
+//#define SXL_DEBUG1
+#endif
+
+#define EMV_ENGLISH								 49
+#define EMV_CHINESE								 50
+
+#define MAG_LAST_FAIL_IC        0x92
+#define MAG_NO_IC				    0x90
+#define MAG_LAST_SUCCESS_IC		0x91
+
+
+#define CARD_QPBOC   0x01
+#define CARD_UPCARD  0x03
+#define CARD_PAYPASS 0x08
+#define CARD_PAYWAVE 0x09
+
+
+#define IC_SUCCESS				0x05
+#define IC_FAIL					0x95
+#define qPBOC_USED				0x07		//20110518 modify based on qPBOC spceification
+#define MSD_USED				0x91		//20110514 FOR MSD
+#define CONTACTLESSFAIL         0xF0        //非接卡交易失败
+
+
+
+#define MAXPAYPASSCCCTIMES 5
+
+/*******************************************************
+        2008-03-31 宋孝亮
+修改信息:
+
+定义返回的数据类型        2008-03-31 宋孝亮
+修改信息:emv处理流程
+
+********************************************************/
+#define EMVTRANSINIT               9 //交易参数初始化
+#define EMVAPPSELECT              10//建立应用列表
+#define EMVCHOOSEAPP               11//应用选择
+#define EMVINITAPP                12//应用初始化
+#define EMVREADRECORD             13//读应用记录
+#define EMVDATAAURH                 14//静态数据认证
+#define EMVPROCESSRESTRICT         15//处理限制
+#define EMVCARDHOLDERVERF          16//持卡人认证
+#define EMVTERMRISKMANAGE          17//终端风险管理
+#define EMVTERMIANALYS             18//终端行为分析
+#define EMVTRANSPROCESS            19//交易处理
+#define EMVTRANSANALY               20
+#define EMVDEALBAGDATA              21
+#define EMVSENDBAG                  22
+#define EMVFINALSELECT               23  //应用最终选择
+#define EMVUSERSELECTAPP             24
+#define EMVRESELECTAPP              25  //重新选择应用
+#define EMVCOMPLETETRANS            26  //EMV完成交易
+#define EMVPRECOMPLETETRANS         27
+#define EMV_TRANSCOMPLETEPROMAT    29   //交易完成提示
+/*******************************************************
+定义返回的数据类型        2009-07-03 huxiang
+修改信息:qPBOC处理流程
+
+********************************************************/
+#define qPBOCPRETRANS               30 //预交易处理
+#define qPBOCDETECTCARD             31 //检测卡片
+#define qPBOCSELECTAPP              32 //选择应用
+#define ECREADECDATA                33 //读取EC应用数据
+#define ECGETECBALANCE              34 //交易结束后得到电子现金余额
+#define INPUTECPIN                  35 //电子现金超阈值后需要输入PIN
+
+#define EMVREQUESTAMOUNT				50
+#define EMVREQUESTOFFPIN				51
+#define EMVREQUESTPIN					52
+#define EMVREQUESTSENDBAG				53
+#define EMVREQUESTECPIN					54
+
+#define PAYPASS_CHECKAVN                70
+#define PAYPASS_COMPUTECRYPTOCHECKSUM   71
+#define PAYPASS_ODAMETHODSELECT         72
+
+#define PAYWAVE_DISPLAY                 73
+#define PAYWAVEDETECTCARD               74
+#define PAYPASSONLINEPIN                75
+#define PAYWAVE_MULTICARD               76
+#define PAYWAVE_MULTICARD_DETECTEDCARD  77
+
+#define PAYPASS_PREGETACBALANCEREAD 78
+#define PAYPASS_MSCHECKCVM          79
+#define PAYPASS_DEALDATAAUTHAFTERGAC 80
+
+
+/*******************************************************
+定义返回的数据类型        2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define APPSEL_PSEFOUND		2
+#define APPSEL_PSENOTFOUND  3
+#define RESELECT			4
+#define OK_AddOfflineAdvice 5
+
+#define ERR_EMV_NoBatchData     21
+#define ERR_EMV_ScriptLen		  22
+#define ERR_EMV_ScriptReturn    23
+#define ERR_EMV_ScriptFormat    24
+#define ERR_EMV_TermDataMissing 25
+#define ERR_EMV_ComOpen         26
+#define ERR_EMV_ComSend         27
+#define ERR_EMV_ComRecv         28
+#define ERR_EMV_MsgData         29
+#define ERR_EMV_IssuerAuthen    30
+#define ERR_EMV_FileSys         31
+#define ERR_EMV_SendAuthRQ      32
+#define ERR_EMV_SendReconci     33
+
+#define ERR_EMV_IccDataFormat   34
+#define ERR_EMV_IccCommand      35
+#define ERR_EMV_IccReturn		  36
+#define ERR_EMV_NoAppSel        37
+#define ERR_EMV_IccDataMissing  38
+#define ERR_EMV_IccDataRedund   39
+#define ERR_EMV_AppReselect     40
+#define ERR_EMV_GetChallenge    41
+#define ERR_EMV_CVRFail         42
+#define ERR_EMV_CVRNoSupport    43
+#define ERR_EMV_InterAuth       44
+#define ERR_EMV_InputCancel     45
+#define ERR_EMV_PSENoMatchApp   46
+#define ERR_EMV_ListNoMatchApp  47
+#define ERR_EMV_NotAccept		   48
+#define ERR_EMV_EmvDataFormat   49
+#define ERR_EMV_CancelTrans     50
+#define ERR_EMV_CardBlock       51 //added on Oct 10,2003
+#define ERR_EMV_CDADifferCID    52 //added on May 25,2004
+
+
+#define ERR_CANCEL				53
+#define ERR_APP_TIMEOUT  	   	54
+#define FAIL			55
+#define ERR_NEEDMAGCARD 56	//GAC时候返回的是6985
+#define ERR_BLOCKORFORMATERR 57
+#define EMV_PARSESUC          58     //sxl 解析成功
+#define EMV_APPBLOCK          59
+#define EMV_EXTRACTMATCH      60
+#define EMV_PARTICALMATCH     61
+#define EMV_NOTMATCH           62
+#define EMV_USERSELECT         63    //提供应用列表给用户选择
+#define ERR_EMVINITAPP_NOTACCEPED 64
+#define EMV_REQUESTPLAINTEXTPIN   65 //EMV请求明文PIN
+#define EMV_REQUESTONLINEENCPIN   66 //请求联机加密PIN
+#define EMV_REQUESTOFFENCPIN      67 //请求脱机加密PIN
+#define EMV_OFFLINEPINSUC         68 //脱机密码正确
+#define EMV_OFFLINEPINERR         69 //脱机密码错误
+#define EMV_TRY_AGAIN_PIN        70 //请重试的
+#define EMV_LAST_PIN_TRY          71 //最后一次
+#define EMV_APPSELECTTRYAGAIN     72 //重选应用
+#define EMV_APPSELECTTRYAGAINSUC  73 
+#define EMV_SHOWRANDNUM            74
+#define EMV_ONLINEWAIT             75
+#define EMV_NEEDREFER              76  //需要REFER
+#define EMV_NEEDREVERSAL           77 //需要发送冲正
+#define EMV_APPROVED                78 //交易批准
+#define EMV_DECLINED                79//交易拒绝
+#define EMV_TRANS_COMPLETED        80//交易完成
+#define EMV_REQUESTAMOUNT          81//请求输入金额
+#define EMV_VERIFYIDCARD          82 //PBOC证件认证
+#define EMV_DISPEMVRECORD         83 //显示交易记录
+#define EMV_RETURNDISPLAYLOG      84//显示完交易日志返回
+#define EMV_NORECORD               85//没有交易日志
+#define EMV_READLOGEND             86//读交易日志结束
+#define ERR_EMV_CDADifferCIDTC    87//CDA TC
+#define ERR_EMV_CDAFORMAT          88//CDA TC时格式不对
+#define ERR_EMV_CVRFailALWAYS      89//CVR FAIL
+#define EMV_SELECTNEXTDDF          90 //要去读下一个DDF
+#define EMVENC_LAST_PIN_TRY          91 //OFFLINE ENC 
+#define EMVENC_TRY_AGAIN_PIN         92//OFFLLINE ENC
+#define ERR_EMV_InputERROR           93
+
+#define EMV_NEEDSENDCOMMAND      97
+#define EMVERRDEAL                98//交易错误处理
+#define EMVTERMINATEDEAL         99//交易失败处理
+#define TRANS_ONLINE_APPROVE     100
+#define TRANS_ONLINE_DECLINE     101
+#define EMVTRANS_COMPLETE        102
+#define TRANS_OFFLINE_APPROVE    103
+#define TRANS_OFFLINE_DECLINE    104
+#define TRANS_TERMINATE_TRANS_ERR 105
+#define TRANS_TERMINATE_TRANS_NOTACCEPT 106
+#define TRANS_EMV_TRANS_COMPLETED  107
+#define EMV_ICCGETPAN              108
+#define EMV_COUNTFLOORLIMIT        109
+#define qPBOC_READRECORD         110//qPBOC读卡记录数据
+#define qPBOC_USEMSD             111 //使用MSD处理
+#define qPBOC_USEPBOC            112 //使用PBOC处理
+#define qPBOC_APPEFFECT          113 //应用尚未生效
+#define qPBOC_APPEXPIRED         114 //应用失效
+#define EC_NOTSUPPORT            115 //该卡是纯电子现金卡，不支持该功能
+#define EC_QUANCUNERR            116 //圈存错误 //huxiang add 091127
+
+#define PAYWAVE_DISPMESSAGE      120
+#define PAYWAVE_PAYWAVEIUP       121
+#define PAYPASS_CCCWAIT          122
+#define PAYPASS_PREDEALFAILED    123
+#define PAYPASS_ENDAPPLICATION   124
+#define PAYPASS_ERRICCRETURN     125
+#define PAYPASS_CCCERR           126
+#define PAYPASS_CCCWAITERR       127  //这里是从reset 开始吗
+#define PAYWAVE_DETECTEDOTHERMODE 128
+#define PAYPASS_TRYANOTHERMODE    129
+
+#define qPBOC_READAIDPARAMETERS   169
+#define qPBOC_OTHERAPCARD         170
+#define qPBOC_RESETCOMMAND        171
+#define qPBOC_RESETFAIL           172
+#define qPBOC_DETECTCARDOVERTIME  173
+#define qPBOC_MULTICARD           174
+#define qPBOC_OTHERERR            175
+#define qPBOC_COMPLETE            176
+#define qPBOC_RECEIVEDOVERTIME    177
+#define qPBOC_READCARDERR         178
+#define qPBOC_RECEIVEBAGERR       179
+#define PAYPASS_READAFTERBALANCEOK 	  180  //jiguang 
+#define PAYPASS_RESELECTAPP	  181  //jiguang add
+#define ERR_EMV_IccCommandERR      182
+#define PAYPASS_DEALWAIT           183
+#define PAYPASS_PARSEERR 184
+#define PAYPASS_CARDDATAMISSING 185
+#define PAYPASS_CARDDATAERR     186
+#define PAYPASS_SW1SW2ERR       187
+#define PAYPASS_PHONECCCPCIIONLYE 188
+#define PAYPASS_DECLINED           189
+
+/*******************************************************
+标签表       2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+//card variable
+#define TermDataBase   100
+
+
+
+
+#define MV_AppCrypt				0
+#define	MV_AppCurcyCode			1
+#define	MV_AppCurcyExp			2
+#define	MV_AppDiscretData		3
+#define	MV_AppEffectDate		4
+#define	MV_AppExpireDate		5
+#define	MV_AFL					6
+#define	MV_ICC_AID				7
+#define	MV_AIP					8
+#define	MV_AppLabel				9
+#define	MV_AppPreferName		10
+#define	MV_PAN					11
+#define	MV_PANSeqNum			12
+#define	MV_AppPriority			13
+#define	MV_AppReferCurcy		14
+#define	MV_AppReferCurcyExp		15
+#define	MV_ATC					16
+#define	MV_AUC					17
+#define	MV_ICC_AppVer			18
+#define	MV_CDOL1				19
+#define	MV_CDOL2				20
+#define	MV_CardholderName		21
+#define	MV_CardholderNameExt	22
+#define	MV_CVMList				23
+#define	MV_ICCAPKI				24
+#define	MV_CryptInfoData		25
+#define	MV_DataAuthenCode		26
+#define	MV_DFName				27
+#define	MV_DDFName				28
+#define	MV_DDOL					29
+#define	MV_ICCDynNum			30
+#define	MV_ICCPIN_EPKCert		31
+#define	MV_ICCPIN_EPKExp		32
+#define	MV_ICCPIN_EPKRem		33
+#define	MV_ICCPKCert			34
+#define	MV_ICCPKExp				35
+#define	MV_ICCPKRem				36
+#define	MV_IACDenial			37
+#define	MV_IACOnline			38
+#define	MV_IACDefault			39
+#define	MV_IssuAppData			40
+#define	MV_ICTI					41
+#define	MV_IssuCountryCode		42
+#define	MV_IPKCert				43
+#define	MV_IPKExp				44
+#define	MV_IPKRem				45
+#define	MV_LangPrefer			46
+#define	MV_LOATCReg				47
+#define	MV_LCOL					48
+#define	MV_PINTryCount			49
+#define	MV_PDOL					50
+#define	MV_ServiceCode			51
+#define	MV_SignDynAppData		52
+#define	MV_SignStatAppData		53
+#define	MV_SDATagList			54
+#define	MV_Track1Discret		55
+#define	MV_Track2Discret		56
+#define	MV_Track2Equivalent		57
+#define	MV_TDOL					58
+#define	MV_UCOL					59
+#define	MV_IssuerURL			60
+#define	MV_VLPAvailableFund		61
+#define	MV_VLPIssuAuthorCode	62
+//lechan 2005-12-26 16:09
+#define MV_CardholderIdType 63
+#define MV_CardholderIdNo 64
+//huxiang  add for qPBOC
+#define MV_CardTransPredicable  65
+#define MV_UNPREDICTUDOL        66
+#define MV_OffAmountDisplay     67
+#define MV_PAYWAVEFFI           68
+
+#define MV_PAYPASSTRACK2DATA    73
+#define MV_PAYPASSPUNATCTRACK2  74
+#define MV_PAYPASSPCVC3TRACK2   75
+#define MV_PAYPASSNATCTRACK2    76
+
+#define MV_PAYPASSCVC3TRACK1    77
+#define MV_PAYPASSNATCTRACK1    78
+#define MV_PAYPASSTRACK1DATA    79
+#define MV_PAYPASSCVC3TRACK2    80
+#define MV_PAYPASSPCVC3TRACK1   81
+#define MV_PAYPASSPUNATCTRACK1  82
+#define MV_PAYWAVEAPD           83
+#define MV_PAYPASSMAGVER        84
+
+#define MV_PAYPASSPREBALANCE		85   //jiguang 20121220
+#define MV_PAYPASSDRDOL		86	 //jiguang 20121221
+#define MV_PAYPASSPOSCII 	87	 //jiguang 20121221
+#define MV_PAYPASSPOSTBALANCE 88  //jiguang 
+
+
+//other variable needed for host-terminal message
+//#define MV_MessageType			80
+//#define MV_EncPINData			81
+//#define MV_IssuAuthenData		82
+//#define MV_IssuScript			83
+//#define MV_IssuScriptResult		84
+//#define MV_CAPK                 85
+//#define MV_ExceptFile           86
+
+//terminal variable
+#define	MV_AcquireID			100
+#define	MV_TermCapab			101
+#define	MV_TermAddCapab			102
+#define	MV_IFDSerial			103
+#define	MV_TermID				104
+#define	MV_MerchCateCode		105
+#define	MV_MerchID				106
+#define	MV_TermCountryCode		107
+#define	MV_TRMData				108
+#define	MV_TermType				109
+#define	MV_TermAppVer			110
+#define	MV_TransCurcyCode		111
+#define	MV_TransCurcyExp		112
+#define	MV_TransReferCurcyCode	113
+#define	MV_TransReferCurcyExp	114
+#define	MV_TACDenial			115
+#define	MV_TACOnline			116
+#define	MV_TACDefault			117
+#define	MV_TransType			118
+#define	MV_TransTypeValue		119
+#define	MV_VLPTransLimit		120
+#define	MV_VLPTACDenial			121
+#define	MV_VLPTACOnline			122
+#define	MV_VLPTACDefault		123
+#define	MV_Language				124
+#define	MV_bTermDDOL			125
+#define	MV_bForceAccept			126
+#define	MV_bForceOnline			127
+#define	MV_bBatchCapture		128
+#define	MV_bTermSupportVLP		129
+#define	MV_MaxTargetPercent		130
+#define	MV_TargetPercent		131
+#define	MV_TermDDOL				132
+#define	MV_TermTDOL				133
+#define	MV_MerchNameLocate		134
+#define	MV_TransLogMaxNum		135
+#define	MV_Threshold			136
+#define	MV_TermFloorLimit		137
+#define	MV_AmtTrans				138
+#define	MV_AmtNet				139
+#define	MV_BatchTransNum		140
+#define	MV_TransNum				141
+#define	MV_TransIndex			142
+#define	MV_TransSeqCount		143
+#define	MV_AmtAuthorBin			144
+#define	MV_AmtAuthorNum			145
+#define	MV_AmtOtherBin			146
+#define	MV_AmtOtherNum			147
+#define	MV_AmtReferCurrency		148
+#define	MV_TERM_AID				149
+#define	MV_AuthorCode			150
+#define	MV_AuthorRespCode		151
+#define	MV_CVMResult			152
+#define	MV_POSEntryMode			153
+#define	MV_PIN					154
+#define	MV_TVR					155
+#define	MV_TSI					156
+#define	MV_VLPIndicator			157
+#define	MV_TransDate			158
+#define	MV_TransTime			159
+#define	MV_TCHashValue			160
+#define	MV_UnpredictNum			161
+#define	MV_IssuerAuthenData		162
+
+//lechan 2006-1-7 11:45上午
+#define MV_TradeType	164
+#define MV_Script71Data 165
+#define MV_Script72Data 166
+#define MV_ScriptResult 167
+#define MV_MerchantName	168
+//huxiang add for qPBOC
+#define MV_TermTransPredicable  169
+#define MV_OffSpendAmount       171
+#define MV_FormFactIndicator    172
+#define MV_CustomerExclusiveData 173
+
+//jiguang add for Paypass ver3.0.1 20121217
+/**************User Interface Request Data********************/
+#define UIRD_MessageIdentifier 0
+#define UIRD_Status 1
+#define UIRD_HoldTime 2
+#define UIRD_LanguagePreference 5
+#define UIRD_ValueQualifier 13
+#define UIRD_Value 14
+#define UIRD_CurrencyCode 20
+//========Message  Identifier========
+#define MI_CARDREADOK 0x17
+#define MI_TRYAGAIN 0x21
+#define MI_APPROVED 0x03
+#define MI_APPROVEDSIGN 0x1A
+#define MI_DECLINED 0x07
+#define MI_ERROROTHERCARD 0x1C
+#define MI_INSERTCARD 0x1D
+#define MI_SEEPHONE 0x20
+#define MI_AUTHORISINGPLEASEWAIT 0x1B
+#define MI_CLEARDISPLAY 0x1E
+//===========Status============
+#define Status_NOTREADY 0x00
+#define Status_IDLE 0x01
+#define Status_READYTOREAD 0x02
+#define Status_PROCESSING 0x03
+#define Status_CARDREADSUCCESSFUL 0x04
+#define Status_PROCESSINGERROR 0x05
+//============Value Qualifier==========
+#define VQ_NONE 0x00
+#define VQ_AMOUNT 0x10
+#define VQ_BALANCE 0x20
+
+/**************Error Indication********************/
+#define EI_L1 0
+#define EI_L2 1
+#define EI_L3 2
+#define EI_SW12 3
+#define EI_MsgOnError 5
+//===========L1============
+#define L1_OK 0x00
+#define L1_TIMEOUTERROR 0x01
+#define L1_TRANSMISSIONERROR 0x02
+#define L1_PROTOCOLERROR 0x03
+//==========L2=============
+#define L2_OK 0x00
+#define L2_CARDDATAMISSING 0x01
+#define L2_CAMFAILED 0x02
+#define L2_STATUSBYTES 0x03
+#define L2_PARSINGERROR 0x04
+#define L2_MAXLIMITEXCEEDED 0x05
+#define L2_CARDDATAERROR 0x06
+#define L2_MAGSTRIPENOTSUPPORTED 0x07
+#define L2_NOPPSE 0x08
+#define L2_PPSEFAULT 0x09
+#define L2_EMPTYCANDIDATELIST 0x0A
+#define L2_IDSREADERROR 0x0B
+#define L2_IDSWRITEERROR 0x0C
+#define L2_IDSDATAERROR 0x0D
+#define L2_IDSNOMATCHINGAC 0x0E
+#define L2_TERMINALDATAERROR 0x0F
+//===========L3============
+#define L3_OK 0x00
+#define L3_TIMEOUT 0x01
+#define L3_STOP 0x02
+#define L3_AMOUNTNOTPRESENT 0x03
+
+/**************Outcome Parameter Set********************/
+#define OPS_Status 0
+#define OPS_Start 1
+#define OPS_OnlineResponseData 2
+#define OPS_CVM 3
+#define OPS_SetBit 4
+#define OPS_AlternateInterfacePreference 5
+#define OPS_FieldOffRequest 6
+#define OPS_RemovalTimeout 7
+//============Status=============
+#define Status_APPROVED 0x10
+#define Status_DECLINED 0x20
+#define Status_ONLINEREQUEST 0x30
+#define Status_ENDAPPLICATION 0x40
+#define Status_SELECTNEXT 0x50
+#define Status_TRYANOTHERINTERFACE 0x60
+#define Status_TRYAGAIN 0x70
+//===============Start===========
+#define Start_A 0x00
+#define Start_B 0x10
+#define Start_C 0x20
+#define Start_D 0x30
+//==============CVM===========
+#define Cvm_NOCVM 0x00
+#define Cvm_OBTAINSIGNATURE 0x10
+#define Cvm_ONLINEPIN 0x20
+#define Cvm_CONFIRMATIONCODEVERIFIED 0x30
+
+/*******************************************************
+emvtask      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define EMVNONE 0
+#define EMVMAINFACE 1	//主界面状态
+#define EMVREADLOG 2	//设置菜单里读交易日志
+#define MAGTRADE 3
+#define EMVHAVECARDIN 4
+#define EMVREADLOGCARDIN 5
+#define WAITOUTCARD   6
+/*******************************************************
+定义对错       2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define EMV_OK					0
+#define EMV_ERR					1
+#define EMV_OTHER              2
+
+/*******************************************************
+支持用户选择应用      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define bProvideConfirm  1
+/*******************************************************
+ASI列表匹配       2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define PARTIAL_MATCH  0
+#define EXACT_MATCH    1
+
+/*******************************************************
+EMV卡座号      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define EMVCARDNO ICCARD_NO1
+/*******************************************************
+发给EMV卡的命令格式错      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define COMMANDERR 0xAA	
+#define COMMTIMEOUT 0xBB
+
+
+
+
+/*******************************************************
+发给EMV卡的命令格式错      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define typePDOL	0
+#define typeCDOL1	1
+#define typeCDOL2	2
+#define typeDDOL	3
+#define typeTDOL	4
+#define typeDRDOL   5
+
+#define GenerateAC1  1
+#define GenerateAC2  2
+/*******************************************************
+交易类型      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define CASH        0
+#define GOODS		1
+#define SERVICE     2
+#define CASHBACK	3
+#define REFUND      4
+
+/*******************************************************
+CVR RESULT      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define CVR_UNKNOWN		0
+#define CVR_FAIL		1
+#define CVR_SUCCESS		2
+
+
+/*******************************************************
+应用类型      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define EMVTYPE   0
+#define PBOCTYPE  1
+#define qPBOCTYPE 2
+#define MSDTYPE   3
+#define PAYPASSAPP   0
+#define PAYWAVEAPP   1
+#define EMVAPP       2
+
+/*******************************************************
+持卡人认证进行到的步骤      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+#define CARDHOLDERVER_INIT 0
+#define CARDHOLDERVER_ANALY 1
+#define CARDHOLDERVER_PERFORM  2
+
+
+#define VERIFYSTEP_INIT  0
+#define VERIFYSTEP_PLAINTEXTPIN 1
+#define VERIFYSTEP_ENCONLINEPIN 2
+#define VERIFYSTEP_ENCOFFLINEPIN 3
+#define VERIFYSTEP_VERIFYIDCARD  4
+#define VERIFYSTEP_PINERR         5
+#define VERIFYSTEP_GETCHANLLENGE 6
+
+
+#define PINPAD_VALID 1
+
+
+//........Analyse.c
+#define OFFLINE 10
+#define ONLINE  11
+#define DENIAL  13
+
+//transaction result
+#define OFFLINE_APPROVE		10
+#define OFFLINE_DECLINE		11
+#define ONLINE_APPROVE		12
+#define ONLINE_DECLINE		13
+#define ONLINE_WAIT			14	//lechan 2006-8-12 17:14
+#define TERMINATE_TRANS_ERR   15
+#define TERMINATE_TRANS_NOTACCEPT 16 //需要显示NOT ACCEPT,并终止交易
+#define FINAL_ONLINEAPPROVE        17
+#define FINAL_ONLINEDECLINE        18
+#define FINAL_ONLINEERRCODE        19
+#define FINAL_ONLINEERRBACK        20
+#define FINAL_PAYPASSUSEOTHERMODE  21
+#define ONLINE_RESULTUNKNOW        22
+
+#define CryptType_TC      10
+#define CryptType_ARQC    11
+#define CryptType_AAR     12
+#define CryptType_AAC     13
+
+
+#define EMVRMAINACC  1
+#define EMVRTRADEAMOUNT 12
+#define INDEXLEN  128
+
+#define ICC_REFER         0
+#define ISSUER_REFER	  1
+
+
+#define TRANSLOGMAXNUM 38
+
+#define NORMALSALE 0
+#define CASHBACKSALE 1
+
+
+/**********************************
+发送命令的结构
+***********************************/
+#define EMVFIRST 0
+#define WAITCARDDATA 1
+#define WAITCARDDATA1 2
+#define WAITCARDDATA2 3
+#define WAITCARDDATA3 4
+#define WAITCARDDATA4 5
+#define WAITCARDDATA5 6
+#define WAITCARDDATA6 7
+#define WAITCARDDATA7 8
+#define WAITCARDDATA8 9
+#define WAITCARDDATA9 10
+#define WAITCARDDATA10 11
+#define WAITCARDDATA11 12
+#define WAITCARDDATA12 13
+#define WAITCARDDATA13 14
+#define WAITCARDDATA14 15
+#define WAITCARDDATA15 16
+#define WAITCARDDATA16 17
+#define WAITCARDDATA17 18
+#define WAITCARDDATA18 19
+
+
+
+
+
+#define MAXSCRIPTLEN 128
+
+
+
+//display-string macro definition
+#define VERSION_INFO                            0
+//standard message:0x01-0x13.
+#define AMOUNT									  1
+#define AMOUNT_OK								  2
+#define APPROVED                                 3
+#define CALL_YOUR_BANK                           4
+#define CANCEL_OR_ENTER                           5
+#define CARD_READ_ERROR                           6
+#define DECLINED								  7
+#define ENTER_AMOUNT                              8
+#define ENTER_PIN                                 9
+#define INCORRECT_PIN                            10
+#define INSERT_CARD                              11
+#define NOT_ACCEPTED							 12
+#define PIN_OK									 13
+#define PLEASE_WAIT								 14
+#define PROCESSING_ERROR                         15
+#define REMOVE_CARD                              16
+#define USE_CHIP_READ                            17
+#define USE_MAG_STRIPE                           18
+
+//main and setup menu title
+#define UPDATE_PARA							     20
+#define BATCH_UP								 21
+#define PRINT_RECEIPT                            22
+
+#define SET_SYSTIME								 30
+#define SET_TIDMID								 31
+#define SELECT_LANGUAGE                          32
+#define SET_TAC									 33
+#define SET_TRMPARA								 34
+#define SET_TRANSTYPE                            35
+#define SET_VLPPARA								 36
+
+
+
+#define TRANS_REFUSED                            40
+#define BYPASS_REFERRAL                          41
+#define ACCEPT_TRANS							 42
+#define DECLINE_TRANS							 43
+#define FORCE_ONLINE							 44
+#define TITLE_APP_SELECT                         45
+#define MAGCARD_READ_ERROR                       46
+#define EMV_LEVEL2_TEST                          47
+#define SAND_TECH_LTD							 48
+#define EMV_ENGLISH								 49
+#define EMV_CHINESE								 50
+#define SETUP_DATE                               51
+#define YYMMDD									 52
+#define OLD_FL									 53
+#define NEW_FL									 54
+#define SETUP_TIME                               55
+#define HHMM									 56
+#define TERMINAL_ID								 57
+#define OLD_ID									 58
+#define NEW_ID                                   59
+#define MERCHANT_ID								 60
+#define TAC_DENIAL								 61
+#define TAC_ONLINE								 62
+#define TAC_DEFAULT								 63
+#define OLD_TAC									 64
+#define NEW_TAC									 65
+#define FLOOR_LIMIT								 66
+#define THRESHOLD								 67
+#define TP										 68
+#define MTP										 69
+#define NEED_PIN								 70
+#define ENTER_FOR_YES							 71
+#define CANCEL_FOR_NO							 72
+#define NO_APP_TRANS							 73
+#define PRN_NO_PAPER							 74
+#define PRN_PRINTING							 75
+#define PUT_ON_BASE								 76
+#define PRN_ERROR								 77
+#define NO_BATCH_DATA                            78
+#define ONLINE_ERROR							 79
+#define READ_TRACK1_OK							 80
+#define READ_TRACK2_OK							 81
+#define READ_TRACK3_OK							 82
+#define BATCH_UP_OK								 83
+#define TRANS_COMPLETED                          84
+#define TRANS_TERMINATED                         85
+//#define DIALING									 86
+#define SERVICE_NOT_ALLOWED                      87
+#define TITLE_TRANS_TYPE						 88
+#define EMV_TRY_AGAIN                                89
+#define WAIT_FOR_PIN                             90
+#define STR_VLP									 91
+#define VLP_TRANS_LIMIT							 92
+#define LAST_PIN_TRY							 93
+#define TRANS_AMOUNT							 94
+#define CASHBACK_AMOUNT				 95
+#define PBOC_VER				96
+#define INITEMV_SYSDATA				97
+#define APP_BLOCK	98
+#define CARD_READ_TIMEOUT 99
+#define CARD_qPBOC_IN 							 100
+#define TERM_CVMNOSUPPORT						 101 
+#define CARD_qPBOC_OUT 							 102
+#define CARD_USEMSD                              103
+#define CARD_USEPBOC                             104
+
+
+
+//PAYPASS selected mode
+#define PAYPASS_SELECTED_MODE_C 0x20
+
+
+/*******************************************************
+基本结构        2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+//1．1.1 命令APDU格式
+typedef struct{
+   	unsigned char   Command[4]; 
+   	unsigned short  Lc;
+   	unsigned char   DataIn[300];
+   	unsigned short  Le;
+	unsigned char EnableCancel;
+}APDU_SEND;
+
+
+//1．1.2 应答APDU格式
+typedef struct{
+	unsigned char  ReadCardDataOk;
+	unsigned short LenOut; 
+   	unsigned char  DataOut[300];
+   	unsigned char  SWA;
+   	unsigned char  SWB;
+}APDU_RESP;
+
+
+//1.1.3 卡状态
+typedef struct{
+	unsigned char  RxState;
+   	unsigned char  RxStateT;
+}CARD_STATE;
+
+
+
+
+
+
+
+
+
+/*******************************************************
+应用选择结构        2008-03-31 宋孝亮
+修改信息:
+********************************************************/
+//1．2．1 卡文件选择应答文件格式
+typedef struct {
+	unsigned char Type; 
+	unsigned char DFNameExist;
+	unsigned char DFNameLen;
+	unsigned char DFName[16]; 
+	unsigned char FCIPropExist;
+	unsigned char SFIExist;
+	unsigned char SFI; 
+	unsigned char LangPreferExist;
+	unsigned char LangPreferLen;
+	unsigned char LangPrefer[8];
+	unsigned char ICTIExist;
+	unsigned char ICTI;     //发卡方代码表索引
+	unsigned char AppLabelExist;
+	unsigned char AppLabelLen;
+	unsigned char AppLabel[16];
+	unsigned char PriorityExist;
+	unsigned char Priority; 
+	unsigned char PDOLExist;
+	unsigned char PDOLLen;
+	unsigned char PDOL[252];
+	unsigned char PreferNameExist;
+	unsigned char PreferNameLen;
+	unsigned char PreferName[16];
+	unsigned char IssuerDiscretExist;  //发卡行自定义数据
+	unsigned char IssuerDiscretLen;
+	unsigned char IssuerDiscret[254];
+	unsigned char LogEntryExist;	
+	unsigned char LogEntryLen;
+	unsigned char LogEntry[222];
+	unsigned char paypassselectppse61tagexist;
+	unsigned char paywaveprogidNameExist;
+	unsigned char paywaveprogidLen;
+	unsigned char paywaveprogid[16];
+	unsigned char FormFactIndicatorExist;    //PayPass Third Party Data  jiguang
+	unsigned char FormFactIndicatorlen;
+	unsigned char FormFactIndicator[32];
+	unsigned char AppCapabilitiesInforExist;    //PayPass Application Capabilities Information  b-3  jiguang  20121218
+	unsigned char AppCapabilitiesInfor[3];
+	unsigned char DSIDExist;    //PayPass   DS ID  variable  jiguang  20121218  
+	unsigned char DSIDlen;
+	unsigned char DSID[11];
+}SELECT_RET;		
+//1．2．2 卡读卡记录应答格式
+typedef struct {
+	unsigned char Type;              //1:DDF,2:ADF
+	unsigned char DFNameExist;      //0-non exist;1-exist.
+	unsigned char DFNameLen;
+	unsigned char DFName[16];       //5-16,ADF or DDF name according to Type.
+	unsigned char AppLabelExist;
+	unsigned char AppLabelLen;
+	unsigned char AppLabel[16];
+	unsigned char PreferNameExist;
+	unsigned char PreferNameLen;
+	unsigned char PreferName[16];
+	unsigned char PriorityExist;
+	unsigned char Priority;         //tag'87'
+	unsigned char DirDiscretExist;
+	unsigned char DirDiscretLen;
+	unsigned char DirDiscret[254];
+}RECORD_PSE;
+//1．2．3 应用标签结构
+typedef struct {
+	unsigned char ASI;               //0-partial match up to the length;1-match exactly
+	unsigned char AIDLen;
+	unsigned char AID[16];          //5-16
+	unsigned char bLocalName;       //If display app list using local language considerless of info in card.0-use card info;1-use local language.
+	unsigned char AppLocalNameLen;
+	unsigned char AppLocalName[16];
+	unsigned char KernelID;
+}TERMAPP;
+//1．2．4 DF文件结构
+typedef struct {
+	unsigned char Type; //0:PSE,1:DDF,2:ADF
+	unsigned char DFName[16]; //5-16
+	unsigned char DFNameLen;
+	unsigned char SFI; //1byte
+	unsigned char LangPrefer[8];//2-8
+	unsigned char LangPreferLen;
+	unsigned char ICTI; //Issuer Code Table Index
+	unsigned char IssuerDiscret[64];
+	unsigned char IssuerDiscretLen;
+	unsigned char InsertAppNo;
+	unsigned char DirDiscret[64];
+	unsigned char DirDiscretLen;
+	unsigned char Recordnum;
+}ATTRIBUTE DFData;
+//1．2．5  应用标签数据
+typedef struct {
+	unsigned char AIDLen;
+	unsigned char AID[16];//5-16
+	unsigned char AppLabelLen;
+	unsigned char AppLabel[16];
+	unsigned char PreferNameLen;
+	unsigned char PreferName[16];
+	unsigned char Priority; //tag'87'
+	unsigned char LangPreferLen;
+	unsigned char LangPrefer[8];//2-8
+	unsigned char ICTI; //Issuer Code Table Index.lang used for display app list according to ISO8859.but not include Chinese,Korea,etc.
+	unsigned char ICTILen;   
+	unsigned char PDOLLen;
+	unsigned char PDOL[127];
+	unsigned char DirDiscretLen;
+	unsigned char DirDiscret[100];
+	unsigned char IssuerDiscretLen;
+	unsigned char IssuerDiscret[222];   //sxl  
+	unsigned char bLocalName;//If display app list using local language considerless of info in card.0-use card info;1-use local language.
+	unsigned char AppLocalNameLen;
+	unsigned char AppLocalName[16];
+	unsigned char AidInTermLen;
+	unsigned char AidInTerm[16];		//对应的终端的AID和长度 
+	unsigned char KernelIdentifierLen;
+	unsigned char KernelIdentifier[8];    //Kernel Identifier   jiguang 20121217
+	unsigned char ReqKernelID;
+	unsigned char AppCapabilitiesInforExist;    //PayPass Application Capabilities Information  b-3  jiguang  20121218
+	unsigned char AppCapabilitiesInfor[3];
+	unsigned char PaypassCCCRespType;
+}APPDATA;		//应用数据信息
+
+typedef struct{
+	unsigned char method;
+	unsigned char condition;
+	unsigned char CurrentStep;
+}ATTRIBUTE CVR;
+
+typedef struct{
+	unsigned char ScriptResult[5];
+	unsigned char ScriptLen;
+	unsigned char Script[256];
+}ATTRIBUTE ISSUER_SCRIPT;
+
+
+
+typedef struct{
+	unsigned char	AppCrypt[8];            //tag'9F26'   AC
+	unsigned char    AppCurcyCode[2];		//App currency code
+	unsigned char    AppCurcyExp;			//App currency exponent
+	unsigned char    AppDiscretDataLen;		//
+	unsigned char    AppDiscretData[32];		//tag'9F05'
+	unsigned char	AppEffectDate[3];		//application effective date. YYMMDD, BCD3
+	unsigned char	AppExpireDate[3];		//application expired date. BCD3 AppExpireDate
+	unsigned char    AFLLen;
+	unsigned char    AFL[252];               //added in P70.
+	unsigned char	AIDLen;
+	unsigned char	AID[16];				//Application Identifier(in ICC)
+	unsigned char	AIP[2];					//Application Interchange Profile
+	unsigned char	AppLabelLen;
+	unsigned char	AppLabel[16];
+	unsigned char	AppPreferNameLen;
+	unsigned char	AppPreferName[16];
+	unsigned char	PANLen;
+	unsigned char	PAN[10];
+	unsigned char	PANSeq;					//identify card with same pan.
+	unsigned char    AppPriority;
+	unsigned char	AppReferCurcyLen;       
+	unsigned char	AppReferCurcy[8];		//Application reference currency
+	unsigned char	AppReferCurcyExpLen;       
+	unsigned char	AppReferCurcyExp[4];	//Application reference currency exponent
+	unsigned char	ATC[2];					//Appication transaction counter
+	unsigned char	AUC[2];					//Application Usage Control
+	unsigned char	AppVer[2];				//VIS1.3.1--0x0083;VIS1.3.2--0x0084;VIS140--0x008c;
+	unsigned char	CDOL1Len;
+	unsigned char    CDOL1[252];
+	unsigned char	CDOL2Len;
+	unsigned char    CDOL2[252];
+	unsigned char    CardHoldNameLen;
+	unsigned char    CardHoldName[26];
+	unsigned char    CardHoldNameExtLen;
+	unsigned char    CardHoldNameExt[45];
+	unsigned char    CVMListLen;
+	unsigned char    CVMList[252];          //Cardholder verification method list
+	unsigned char	CAPKI;				   //Certification Authority Public Key Index
+	unsigned char	CryptInfo;             //tag'9F27'  CID
+	unsigned char	DataAuthCode[2];       //tag"9F45"
+	unsigned char	DFNameLen;
+	unsigned char	DFName[16];
+	unsigned char	DDFNameLen;
+	unsigned char	DDFName[16];
+	unsigned char    DDOLLen;
+	unsigned char    DDOL[252];
+	unsigned char	ICCDynNumLen;
+	unsigned char	ICCDynNum[8];           //ICC dynamic number. len 2-8
+	unsigned char    ICCPIN_EPKCertLen;      //NI
+	unsigned char    ICCPIN_EPKCert[248];
+	unsigned char    ICCPIN_EPKExpLen;       //1 or 3
+	unsigned char    ICCPIN_EPKExp[3];
+	unsigned char    ICCPIN_EPKRemLen;       //NPE-NI+42 < 42
+	unsigned char    ICCPIN_EPKRem[42];
+	unsigned char    ICCPKCertLen;           //NI 
+	unsigned char    ICCPKCert[248];         //ICC Public Key certification
+	unsigned char    ICCPKExpLen;
+	unsigned char    ICCPKExp[3];            //ICC Public Key exponent
+	unsigned char    ICCPKRemLen;            //NIC-NI+42 < 42
+	unsigned char    ICCPKRem[42];			//ICC Public Key remainder
+	unsigned char	IACDenial[5];
+	unsigned char	IACOnline[5];
+	unsigned char	IACDefault[5];
+	unsigned char	IssuAppDataLen;
+	unsigned char	IssuAppData[32];
+	unsigned char	ICTI;                   //Issuer code table index
+	unsigned char    IssuCountryCode[2];
+	unsigned char    IPKCertLen;          //NCA
+	unsigned char    IPKCert[248];
+	unsigned char    IPKExpLen;           //1-3
+	unsigned char    IPKExp[3];
+	unsigned char    IPKRemLen;           //NI-NCA+36<36
+	unsigned char    IPKRem[36];
+	unsigned char	LangPreferLen;          //2-8
+	unsigned char	LangPrefer[8];
+	unsigned char	LOATC[2];				 //Last Online ATC Register
+	unsigned char	LCOL;					 //Lower Consecutive Offline Limit 
+	unsigned char	PINTryCount;			 //PIN try counter
+	unsigned char    PDOLLen;
+	unsigned char    PDOL[252];               //added in P70.
+	unsigned char	ServiceCode[2];
+	unsigned char    SignDynAppDataLen;       //NIC
+	unsigned char    SignDynAppData[248];     //128->248
+	unsigned char    SignStatAppDataLen;      //NI
+	unsigned char    SignStatAppData[248];
+	unsigned char    SDATagListLen;
+	unsigned char    SDATagList[128];        //in EMV2000 only tag'82' appears if exist.
+	unsigned char    Track1DiscretLen;
+	unsigned char    Track1Discret[128];
+	unsigned char    Track2DiscretLen;
+	unsigned char    Track2Discret[128];
+	unsigned char    Track2EquLen;
+	unsigned char    Track2Equ[19];          //Track2 equaivalent data
+	unsigned char	TDOLLen;
+	unsigned char	TDOL[252];
+	unsigned char	UCOL;					//Upper Consecutive Offline Limit
+	unsigned char    IssuerURLLen;
+	unsigned char    IssuerURL[128];         //new added data in EMV2000
+	unsigned char    VLPAvailableFund[6];    //tag'9F79',n12,new added for VLP in VIS1.4.0.
+	unsigned char    VLPIssuAuthorCode[6];   //tag'9F74',asc,"VLP***",new added for VLP in VIS1.4.0.
+	unsigned char	CardHoldIdType;		//tag '9f62' n1 00= 身份证
+	unsigned char	CardHoldIdLen;		
+	unsigned char	CardHoldIdNo[40];	//tag '9f61' cardidno 证件号1-40ANS
+	unsigned char	CardTransPredicable[2];	//tag '9f6C' 卡片交易属性
+	unsigned char	qPBOCUndefinedParamLen;
+	unsigned char   qPBOCUndfinedParam[255]; //tag '9f69' undefined param
+	unsigned char   qPBOCOfflineSpendAmount[6]; //tag '9f5D' 脱机可用金额
+	unsigned char   FormFactIndicatorlen;     
+	unsigned char   FormFactIndicator[32]; //tag '9f6E' form fact indicator
+	unsigned char   CustomerExclusiveDatalen;
+	unsigned char   CustomerExclusiveData[128]; //tag'9F7C' Customer Exclusive Data
+	unsigned char   ECResetThreshold[6];   //tag '9F6D' EC Reset Threshold
+	unsigned char   MaxECCashBalance[6];   //tag '9F77'  EC max limit
+	unsigned char   CardIdentifyInfoLen;	//tag '9F63' 长度 产品标识信息  //huxiang add 100505
+	unsigned char   CardIdentifyInfo[16];  //tag '9F63'  产品标识信息  //huxiang add 100505
+	unsigned char   PaypassMagTrack2Len;   //tag '9f6b' paypass magstripe track2 data len
+	unsigned char   PaypassMagTrack2[19];  //tag '9f6b' paypass magstripe track2 data
+	unsigned char   PaypassPunatcTrack2[2]; //tag'9f66'
+	unsigned char   PaypassPcvc3Track2[2]; //tag'9f65'
+	unsigned char   PaypassNatcTrack2;      //tag'9f67'
+	//unsigned char   PaypassAppTemplatelen;
+	//unsigned char   PaypassAppTemplate[252]; //tag'61' application template
+	//unsigned char   PaypassCommandTemplatelen;
+	//unsigned char   PaypassCommandTemplate[252]; //tag'83' command template
+	unsigned char   PaypassCVC3Track1[2];  //tag '9f60'
+	unsigned char   Paypassnatctrack1;       //tag '9f64' NATC TRACK1
+	unsigned char   PaypassTrack1Datalen;
+	unsigned char   PayPassTrack1Data[76];   //tag '56'   PAYPASS Track1 data
+	unsigned char   PaypassCVC3Track2[2];    //paypass tag '9F61'
+	unsigned char   PaypassPCVC3Track1[6];   //paypass tag '9f62'
+	//unsigned char   PaypassMerchantCustomData[20]; //paypass tag '9f7c'
+	unsigned char   PaypassPunatcTrack1[6];        //paypass tag '9f63'
+	unsigned char   PaywaveAppProgIdlen;      //paywave tag '9f5a'
+	unsigned char   PaywaveAppProgId[16];
+	unsigned char   PayPassMagVersion[2];     //paypass tag '9f6c'
+	unsigned char   PayPassPreBalance[6];     //paypass tag '9f50'  jiguang 20121220 add
+	unsigned char	DRDOLLen;
+	unsigned char   DRDOL[252];  //paypass DRDOL '9f51'  jiguang 20121221 add
+	unsigned char   POSCII[3];     // POS Cardholder Interaction Information  Tag'DF4B'  jiguang 
+	unsigned char   PayPassPostBalance[6];     //paypass tag '9f50'  jiguang 20121225 add
+}CARDINFO;
+
+typedef struct{
+		//first part are transaction independent data. should be initialised after power on.
+	unsigned char    AcquireID[6];           //tag'9F01' Acquirer ID
+	unsigned char	TermCapab[3];			//tag'9F33' terminal capability
+	unsigned char	TermAddCapab[5];		//tag'9F40' terminal additional capability
+	unsigned char	IFD_SN[8];              //tag'9F1E' IFD(POS device) serial no. asc8
+	unsigned char    TermID[8];				//tag'9F1C' Terminal ID
+	unsigned char    MerchCateCode[2];       //tag'9F15' Merchant Category Code
+	unsigned char    MerchID[15];            //tag'9F16' Merchant ID
+	unsigned char	CountryCode[2];			//tag'9F1A' Terminal country code BCD
+	unsigned char	TRMDataLen;
+	unsigned char	TRMData[8];				//tag'9F1D' Terminal Risk Management Data
+	unsigned char	TermType;				//tag'9F35' Terminal type
+	unsigned char	AppVer[2];				//tag'9F09' Application Version Number in terminal//VIS1.3.1--0x0083;VIS1.3.2--0x0084;VIS140--0x008c;
+	unsigned char    TransCurcyCode[2];      //tag'5F2A'
+	unsigned char    TransCurcyExp;          //tag'5F36'
+	unsigned char    TransReferCurcyCode[2]; //tag'9F3C'
+	unsigned char    TransReferCurcyExp;     //tag'9F3D'
+	unsigned char	TACDenial[5];			//Terminal action code-denial
+	unsigned char	TACOnline[5];			//Terminal action code-online
+	unsigned char	TACDefault[5];			//Terminal action code-default
+	unsigned char    TransType;              //for distinguish different trans types such as goods and service.
+	unsigned char    TransTypeValue;         //tag'9C',transtype value(first two digits of processing code) as stated in EMV2000. goods and service are both 0x00.
+	unsigned char	VLPTransLimit[6];		//tag'9F7B',n12, new added in VIS1.4.0.
+	unsigned char	VLPTACDenial[5];		//Terminal action code-denial for VLP
+	unsigned char	VLPTACOnline[5];		//Terminal action code-online for VLP
+	unsigned char	VLPTACDefault[5];		//Terminal action code-default for VLP
+	unsigned char	Language;				//CHINESE or ENGLISH for display and print language.
+	unsigned char	bTermDDOL;              //0-no default DDOl in terminal;1- has default DDOL in terminal  
+	unsigned char	bForceAccept;			//this two set according test script V2CM080.00,V2CM081.00
+	unsigned char	bForceOnline;			//also see emvterm.pdf p32
+	unsigned char	bBatchCapture;          //private set for send different msg to host-AuthRQ and FinaRQ.
+	unsigned char    bTermSupportVLP;        //0-not support;1-support. configurable terminal parameter to indicate if VLP is supported.
+	unsigned char	MaxTargetPercent;
+	unsigned char	TargetPercent;          //Preset by terminal. range 0-99, and MTP>=TP
+	unsigned char	TermDDOLLen;
+	unsigned char	TermDDOL[128];          //term hold of default DDOL,must be initialised in init.
+	unsigned char	TermTDOLLen;
+	unsigned char	TermTDOL[128];          //terminal stored default TDOL.
+	unsigned char    MerchNameLocateLen;
+	unsigned char    MerchNameLocate[128];   //EMV2000 new added
+	unsigned char	TransLogMaxNum[2];		//max transLogs stored for check floor limit(default 20)
+	unsigned char	Threshold[4];				//threshold for random selection.
+	unsigned char	FloorLimit[4];				//tag'9F1B' terminal floor limit
+	
+	//sencond part are transaction various data and need to be saved.
+	unsigned char	AmtTrans[4];            //used in online financial or batch capture msg.
+	unsigned char	AmtNet[4];              //total accumulative amount for reconciliation.
+	unsigned char	BatchTransNum[2];		//number of trans stored in terminal.used for reconciliation
+	unsigned char	TransNum[2];        	//numbers of floorlimit translog for floorlimit check.
+	unsigned char	TransIndex[2];      	//added for new floorlimit translog insert position.
+	unsigned char	TransSeqCount[4];		//increment by 1 for each trans. BCD numeric.
+
+	//third part are transaction dependent data and needn't be save.
+	//But they may be used in processing DOL. 
+	unsigned char	AmtAuthBin[4];			//tag'81' Authorised amount of binary
+	unsigned char    AmtAuthNum[6];			//tag'9F02' Authorised amount of BCD numeric
+	unsigned char	AmtOtherBin[4];			//tag'9F04' Other(cashback) amount of binary
+	unsigned char    AmtOtherNum[6];         //tag'9F03' Other(cashback) amount of BCD numeric
+	unsigned char	AmtReferCurcy[4];		//tag'9F3A' Authorised amount in the reference currency
+	unsigned char	AIDLen;
+	unsigned char	AID[16];				//tag'9F06' Application Identifier for selected application,5-16
+	unsigned char    AuthorCode[6];          //tag'89'   ret from issuer.move to TermInfo from global variable in P70.
+	unsigned char	AuthRespCode[2];        //tag'8A'   Authorised respose code received from host.
+	unsigned char	CVMResult[3];			//tag'9F34' cardholder verification methods perform result
+	unsigned char	POSEntryMode;			//tag'9F39' POS entry mode,BCD
+	unsigned char    PINLen;
+    unsigned char    PIN[12];                //tag'99'
+	unsigned char	 TVR[5];					//tag'95'   Terminal Verification Results
+	unsigned char    TSI[2];                 //tag'9B' Transaction Status Information 
+	unsigned char	 VLPIndicator;			//tag'9F7A' //0-not support; 1-support; 2-VLP only. variable parameter to indicate if this trans is VLP supported.
+	unsigned char    TransDate[3];           //tag'9A'   YYMMDD
+	unsigned char    TransTime[3];           //tag'9F21',HHMMSS,BCD
+	unsigned char    TCHashValue[20];        //tag'98'
+	unsigned char    UnpredictNum[4];        //tag'9F37' Terminal created for each transaction.
+	unsigned char    IssuerAuthenDataLen;
+	unsigned char    IssuerAuthenData[16];   //tag'91'   Issuer Authentication Data.
+	unsigned char    MCHIPTransCateCode;     //tag '9F53' Transaction Category Code, Mastercard M/Chip private data.
+	
+	//2005-12-26 11:53lechan
+	unsigned char 	AppType;	//应用类型,=  1 为EMV应用 =2 为PBOC应用
+	//lechan 2006-1-7 12:30下午
+	unsigned char    Script71DataLen;		//tag '71' len
+	unsigned char    Script71Data[128];		//tag '71' Script71Data
+	unsigned char	Script72DataLen;		//tag '72' len
+	unsigned char    Script72Data[128];		//tag '72' Script72Data
+	unsigned char    ScriptResultDataLen;		//tag 'DF31' 脚本结果长度
+	unsigned char	ScriptResultData[21];		//tag 'DF31' 脚本结果
+	unsigned char TermTransPredicable[4]; //tag '9F66'huxiang 090702 for qPBOC
+	
+	unsigned char	MerchantNameLen;
+	unsigned char	MerchantName[20];
+
+	unsigned char    Asi;
+	unsigned char    bShowRandNum;
+
+
+	//sxl  2008-04-03      //加上一些认证数据,及状态
+	unsigned char PDOLData[255];
+	unsigned char PDOLDataLen;
+	unsigned char AFL[255][4];    
+    unsigned char AFL_Num;
+	unsigned char bAbleOnline;
+	unsigned char bErrAuthData;
+	unsigned char bErrSDATL;
+	unsigned short AFlDataindexOut;   //数据认证偏移  jiguang
+	unsigned char AuthData[2048];  //数据认证数据    jiguang
+	unsigned short AuthDataLen;
+	unsigned char bCardConfirmVLP;
+	unsigned char bCombineDDA;  //  CDA
+	unsigned char IPKModulLen;
+	unsigned char IPKModul[248];
+	unsigned char ICCPKModul[248];
+    unsigned char ICCPKModulLen;//NICC
+    unsigned char DDOLData[256];
+	unsigned char DDOLDataLen;
+	unsigned char bDDOLHasNoUnpredictNum;
+	unsigned char bCDOL1HasNoUnpredictNum;
+	unsigned char bCDOL2HasNoUnpredictNum;
+	unsigned char emvtranstime[9];
+	unsigned long TermAmtOtherBin;
+	unsigned long TermAmtAuthBin;
+	//unsigned char AppType;
+
+	//CVMLIST
+	CVR CVRList[120];    //sxl 090212
+	unsigned char CVRListLen;
+	unsigned char NowCVRListLen;
+	unsigned long CVM_X;
+	unsigned long CVM_Y;
+	unsigned char needcvm;
+	unsigned char nextcvm;
+	unsigned char currentverifystep;
+	unsigned char inputpinstatus;     //输入密码状态
+	unsigned char bPrintReceipt;
+	unsigned char ICCPIN_EPKModul[248];
+	unsigned char ICCPIN_EPKModulLen;
+
+	unsigned char RandNum;    //显示随机树
+	unsigned char bCombineDDAFail;
+	unsigned char reqCrpt;    //GAC请求类型
+	unsigned char CDOL1DataLen;
+	unsigned char CDOL1Data[256];
+	unsigned char CDOL2DataLen;
+	unsigned char CDOL2Data[256];
+	unsigned char GenerateACRetData[128];     //GAC命令后卡片返回的数据   jiguang
+	unsigned char GenerateACRetDataLen;
+	unsigned char bAdvice;   //CID 9f27  标识需要通知jiguang
+	unsigned char TransResult;
+	unsigned char bReversal;    //需要冲正
+	unsigned short IssuScriptLen;   //sxl 1106
+	unsigned char IssuScript[300]; //sxl 1106
+	unsigned short IssuScriptNum;   //sxl 1106
+	ISSUER_SCRIPT IssuerScriptStruct[8];
+	unsigned char IssuScriptResult[160];
+	unsigned char IssuScriptResultNowNum;
+	unsigned char TermPINDesKey[8];
+	unsigned char EncryptPIN[32];
+	unsigned char EncryptPINLen;
+	unsigned char NeedShowRandNum;
+	unsigned char IfNeedRefer;
+	unsigned char ICCUnpredictNum[8];
+	unsigned char IfAppCheckFloorLimit;
+	unsigned char IfTransOverFloorLimit;
+	unsigned char TermCVM_Limit[4]; //huxiang 090702  for qPBOC
+	unsigned char CLessOfflineAmt[4]; //huxiang 090703  for qPBOC
+	unsigned char TermCVM; //huxiang 090702  for qPBOC only suport online pin and sign
+	unsigned char CLessOfflineLimitAmt[4]; //huxiang 090703  for qPBOC
+	unsigned char SupportTermCheck; //huxiang 090703
+	unsigned char qPBOCOrMSD; //huxiang 090703
+	unsigned char ECSupportIndicator;
+	unsigned short EmvNowTask;
+	unsigned char Ec_LessThanResetAmount;
+	unsigned char EmvICCDataNum;
+	unsigned char	EmvTermDataNum;
+
+	//paypass
+	unsigned char UDOLData[3];
+	unsigned char UDOLDataLen;
+	unsigned char paypassun[4];     //Unpredictable Number   jiguang
+	unsigned char TermUDOL[128];
+	unsigned char TermUDOLLen;
+	unsigned char Paypassconverttrack2Len;
+	unsigned char Paypassconverttrack2[50];
+	unsigned char Paypassconverttrack1Len;
+	unsigned char Paypassconverttrack1[80];
+	unsigned char PaypassnUN;
+	unsigned char PaypassTermEFLEF;   // Terminal Contactless Floor Limit Exceeded Flag   jiguang
+	unsigned char PaypassCVMRLEF;
+	unsigned char paypassMagAppVer[2];    //mag stripe application version number  9f6d   jiguang
+	unsigned char paypasscategorycode[2];  //tag 9f15
+	unsigned char paypassterminaltype;
+	unsigned char paypassMerchantCustomData[20]; //tag 9f 7c
+	unsigned char paypassendappflag;  //PayPass  交易结束 jiguang
+	unsigned char paypassonlinepinreq; //online pin required
+	unsigned char paypassnocvmrequired[3];
+	unsigned char paypasshavebagtag;  //有PayPass专有Tag  结束交易 jiguang
+	unsigned char CDAFAILbeforeGAC;  //这个标志不懂  只要进行CDA验证就会置位  jiguang
+
+	//paywave
+	unsigned char PaywaveCANAI;  //Contactless Application Not Allowed indicator   jiguang
+	unsigned char PaywaveDRRI;  //Decline Required by Reader Indicator --1   Online Required by Reader Indicator  --2 jiguang
+	unsigned char PaywaveIUP;   // Paywave Issuer Update Processing
+	unsigned char IssuerUpdateSupport; //paywave support issuer update
+	unsigned char *paypassccctimes;
+	unsigned int  *paypassccctimer;
+	unsigned char MSDCVN17Support;
+	unsigned char paywavepredealparam;
+	unsigned char paywavepdolfddaelement;
+	unsigned char PaywaveIUPperformed; 
+	unsigned char paywavecvntype;
+	unsigned char paywavetrackdataup;
+	unsigned char cardtype;
+	unsigned char paywavemerchantnamelen;
+	unsigned char paywavemerchantname[80];
+	unsigned char canceldealiup;
+	unsigned char startdealiup;
+	unsigned char EMV_NowTask;
+
+
+	//PayPass  ver 3.0.1  jiguang 20121220
+	unsigned char MaxNumberofTornTransactionLogRecord;
+	unsigned char MobileSupportIndicator;   //Mobile Support Indicator  '9F7E'
+	unsigned char PaypassRecoverSupFlag;
+	unsigned char PaypassSupportODCV;
+	unsigned char PaypassnUN1;
+	unsigned char PaypassRecoverdflag;
+	unsigned char Paypassintornlog;
+	unsigned char PaypassSelectedMode;
+	unsigned char PaypassSelectedPOSCIIID;
+}ATTRIBUTE TERMINFO;
+
+
+
+//
+typedef struct{
+	unsigned char  Tag[3];//Second byte '00' means only first one byte tag.add third byte to make int variable oven aligned.
+	unsigned char  Len1; //Len1>Len2: fix len with Len2;Len1<Len2 and Len2!=255: Len1<= len <=Len2; Len2=255: len=Len1+Len2
+	unsigned char  Len2;
+	unsigned char  bAmt;//0- non numeric;1-numeric;2-compact numric
+	unsigned short address;//var address in struct TermInfo(TERMINFO)
+	unsigned char  flagM;//'1'--bit0: mandatory;bit1: SDA mandatory; bit2: DDA mandatory;
+	unsigned char  bExist;//0-not presented,1-have been existed.	
+}DATAELEMENT;
+
+
+
+#define RFD_AID
+
+
+
+typedef struct
+{
+/*
+	unsigned char AidLen;
+	unsigned char Aid[16];
+	unsigned char Asi;
+*/
+	unsigned char AidLen;
+	unsigned char Aid[16];//5-16
+	unsigned char Asi;  //Application Selection Indicator.0-needn't match exactly(partial match up to the length);1-match exactly
+	unsigned char AppVerNum[2];
+	unsigned char TacDefault[5]; 
+	unsigned char TacOnline[5];
+	unsigned char TacDecline[5];
+	unsigned char FloorLimit[4];
+	unsigned char Threshold[4];
+	unsigned char MaxTargetPercent;
+	unsigned char TargetPercent;
+	unsigned char TermDDOLLen;
+	unsigned char TermDDOL[128];
+	unsigned char TermPinCap;					
+	unsigned char vlptranslimit[6]; //huxiang add 091013 for Ec and qPBOC
+	unsigned char termcvm_limit[6]; //huxiang add 091013 for Ec and qPBOC       cvm limit
+	unsigned char clessofflineamt[6]; //huxiang add 091013 for Ec and qPBOC   transaction limit
+	unsigned char clessofflinelimitamt[6]; //huxiang add 091013 for Ec and qPBOC floor limit
+	unsigned char bShowRandNum;
+	unsigned char bLocalName;//If display app list using local language considerless of info in card.0-use card info;1-use local language.
+	unsigned char AppLocalNameLen;
+	unsigned char AppLocalName[16];
+	
+	unsigned char bForceOnline;
+
+
+	#ifdef RFD_AID
+	
+	unsigned char terminaltype;              //sxl?
+	unsigned char terminalcapability[3];
+	unsigned char terminaladdcapability[5];
+    unsigned char reservedlen;
+	unsigned char reserved[128]; //total 485
+	unsigned char appID;				//应用标识
+	unsigned char TermTransPredicable[4];	//HHL: 20110226
+	unsigned char paywavepredealparam;
+	//unsigned char PaypassMagVer[2];         //paypass magstripe version
+	#endif
+	
+}EmvSysIni_STRUCT;
+
+
+typedef struct 
+{
+	unsigned char RID[5];
+	unsigned char CAPKI;
+	unsigned char HashInd;
+	unsigned char ArithInd;
+	unsigned char ModulLen;
+	unsigned char Modul[248];
+	unsigned char ExponentLen;
+	unsigned char Exponent[3];
+	unsigned char CheckSumLen;
+	unsigned char CheckSum[20];
+	unsigned char ExpireDate[4];	//失效期  //lechan 2006-1-9 02:20下午
+}CAPK_STRUCT;
+
+typedef struct{
+	unsigned char TACDenial[5];
+	unsigned char TACOnline[5];
+	unsigned char TACDefault[5];
+}ISSUER_TAC;
+
+//从发卡行公钥证书恢复数据的格式
+typedef struct{
+	unsigned char DataHead;		//'6A'恢复数据头
+	unsigned char CertFormat;	    //'02'证书格式
+	unsigned char IssuID[4];		//主帐号最左面的3-8个数(右补F)发卡行标识
+	unsigned char ExpireDate[2];	//证书失效日期MMYY
+	unsigned char CertSerial[3];	//证书序列号
+	unsigned char HashInd;		    //哈希算法标识
+	unsigned char IPKAlgoInd;	    //发卡行公钥算法标识
+	unsigned char IPKLen;		    //发卡行公钥的字节长度
+	unsigned char IPKExpLen;		//发卡行公钥指数的字节长度
+	unsigned char IPKLeft[212];	//发卡行公钥或公钥最左边的字节NCA-36不够右补BB
+	unsigned char HashResult[20]; //哈希结果
+	unsigned char DataTrail;		//'BC'恢复数据结尾	
+}IPK_RECOVER;
+
+typedef struct{
+	unsigned char DataHead;//'6A'
+	unsigned char CertFormat;//'04'
+	unsigned char AppPAN[10];
+	unsigned char ExpireDate[2];
+	unsigned char CertSerial[3];
+	unsigned char HashInd;
+	unsigned char ICCPKAlgoInd;
+	unsigned char ICCPKLen;
+	unsigned char ICCPKExpLen;	
+	unsigned char ICCPKLeft[206];//NI-42
+	unsigned char HashResult[20];
+	unsigned char DataTrail;//'BC'
+}ICCPK_RECOVER;
+
+typedef struct {
+	unsigned char DataHead;//'6A'
+	unsigned char DataFormat;//'05'
+	unsigned char HashInd;//'01'
+	unsigned char ICCDynDataLen;
+	unsigned char ICCDynData[223];//LDD	<NIC-25
+	unsigned char PadPattern[223];//NIC-LDD-25,padded with 'BB'
+	unsigned char HashResult[20];		
+	unsigned char DataTrail;//'BC'
+}SIGN_DYN_APPDATA_RECOVER;
+
+typedef struct {
+	unsigned char DataHead;//'6A'
+	unsigned char DataFormat;//'03'
+	unsigned char HashInd;
+	unsigned char DataAuthCode[2];
+	unsigned char PadPattern[222];//NI-26
+	unsigned char HashResult[20];
+	unsigned char DataTrail;//'BC'
+}SIGN_STAT_APPDATA_RECOVER;	
+
+typedef struct {
+	unsigned char RID[5];
+	unsigned char CAPKI;
+	unsigned char CERTSerial[3];
+}IPK_REVOKE;
+
+
+
+
+
+typedef struct {
+	unsigned char DataHead;//'6A'
+	unsigned char CertFormat;//'04'
+	unsigned char AppPAN[10];
+	unsigned char ExpireDate[2];
+	unsigned char CertSerial[3];
+	unsigned char HashInd;
+	unsigned char ICCPIN_EPKAlgoInd;
+	unsigned char ICCPIN_EPKLen;
+	unsigned char ICCPIN_EPKExpLen;	
+	unsigned char ICCPIN_EPKLeft[206];//NI-42
+	unsigned char HashResult[20];
+	unsigned char DataTrail;//'BC'
+}ICCPIN_EPK_RECOVER;
+
+
+typedef struct{
+	unsigned char IACDenial[5];
+	unsigned char IACOnline[5];
+	unsigned char IACDefault[5];
+}Card_TAC;
+
+typedef struct {
+	unsigned char ICCDynNumLen;
+	unsigned char ICCDynNum[8];
+	unsigned char CryptInfo;
+	unsigned char AppCrypt[8];
+	unsigned char HashResult[20];
+}ICC_DYN_DATA;
+
+
+typedef struct{
+	unsigned char AppPriority[16];
+	unsigned char AppSeq[16];
+	unsigned char seqtype;
+	unsigned char SelectedNum;
+	unsigned char SelectedResult;
+}DISPSEQLISTDATA;
+
+
+typedef struct{
+	long  TransAmt;        /* Transaction amount */
+    unsigned int TransCount;     /* Transaction Sequence Counter. inc by 1 for each trans*/
+    unsigned char  TransType;        /* Transaction type BCD */
+	unsigned char  TSI[2];           /* Transaction Status Information */
+    unsigned char  PANLen;
+    unsigned char  PAN[10];          /* Primary account No. */
+	unsigned char  PANSeq;           /* EMVTest: sequence num with same PAN */
+    unsigned char  TransDate[3];     /* Trancaction Date(Form:"YY/MM/DD") */
+    unsigned char  TransTime[3];     /* Trancaction Time(Form:"HH/MM/SS") */
+} TRANS_LOG;
+
+
+
+typedef struct{
+	DFData DFListIcc[8];
+	unsigned char DFNum;
+    unsigned char curDFNum;
+	unsigned char bSelectPSE;
+	unsigned char SelectNextDDF;
+	unsigned char sfi;
+	unsigned char record_num;
+	unsigned char bSecond;
+	unsigned char bNextTemp;
+	unsigned char bNextSelect;
+	unsigned char AppNumIndex;
+	unsigned char Read_AFL_Num;
+	unsigned char AFL_RecordNum;
+	unsigned char bATCExist;
+	unsigned short lenScriptPerformed;
+	unsigned char IssuScriptNowNum;
+	unsigned char numScriptCom;
+	unsigned char Scriptindextemp;
+	unsigned char ScriptRet;
+	unsigned char ScriptK;
+	unsigned char  curScriptID[4];
+	unsigned char script[300];
+    unsigned char FCIICTIExist;  //huxiang 20090702
+    unsigned char ICTI;//huxiang 20090702
+    unsigned char paypasscompareflag;
+	unsigned char readrecordparseerr;
+}ATTRIBUTE LOCALVARIBLE;
+
+typedef struct{
+	unsigned char stateA;
+	unsigned char stateB;
+	unsigned char stateC;
+	unsigned char stateD;
+	unsigned char stateE;
+	unsigned char stateF;
+	unsigned char stateG;
+	unsigned char stateParam;
+	unsigned char stateParam2;
+}EMVSTATE;
+
+//paypass Pre-processing struct
+typedef struct _PAYPASSPREPROCEFLAG{
+	unsigned char TermCTLEF;    //terminal contactless transaction limit exceeded flag
+	unsigned char TermCFLEF;   //terminal contactless floor limit exceed flag
+	unsigned char TermCVMRLEF; //terminal CVM required limit exceeded flag
+	unsigned char PaywaveCANAI;//Contactless Application Not Allowed indicator  jiguang
+	unsigned char DRLsupport;
+}PAYPASSPREPROCEFLAG;
+
+
+
+
+#define MAXPHONEMESSAGETABLENUM 5
+typedef struct
+{
+	unsigned char PCIIMASK[3];
+	unsigned char PCIIVALUE[3];
+	unsigned char MESSAGE;
+	unsigned char STATUS;
+}PHONEMESSAGETABLE;
+
+
+
+typedef struct
+{
+    unsigned int phonemessagetablenum;
+	PHONEMESSAGETABLE phonemessagetable[MAXPHONEMESSAGETABLENUM];
+}PHONEMESSAGETABLEINFO;
+
+
+
+typedef unsigned char (*core_checkifcardintornlog)(void);
+typedef unsigned char (*core_RECOVERAC)(unsigned char *DOL,unsigned short DOLLen,APDU_SEND *apdu_s);
+typedef u8 (*core_deletetornlog)(void);
+typedef void (*core_addtornlog)(AppUnionStruct *tempApp_UnionStruct);
+
+
+
+// 1.2.6指向DFData，TERMAPP，APPDATA的指针结构体
+typedef struct {
+	DFData *AppDfData;                 //DFListIcc[8]
+	unsigned char *dflistnum;          //DFNum
+	TERMAPP *AppTermApp;               //AppListTerm[40]       
+	unsigned char *termlistnum;        //TermAppNum
+	APPDATA *AppAppData;               //AppListCandidate[16]       
+	APPDATA *selectedapp;              //SelectedApp
+	unsigned char *SmsTempAid;          //消费撤消时记录的上次交易时的AID
+	unsigned char *appnum;              //AppNum
+	unsigned char *appblockflag;      //应用是否被锁标志
+	unsigned char *selectedappno;     //SelectedAppNo
+	unsigned char *bretforminit;      //强制持卡人选择应用标志
+	unsigned short *emvreserved;
+	DISPSEQLISTDATA *dispseqlist;
+	CARDINFO *cardinfo;               //卡片数据CARDINFO
+	TERMINFO *terminfo;               //TERMINFO
+	DATAELEMENT *iccdatatable;
+	DATAELEMENT *termdatatable;
+	EmvSysIni_STRUCT *aidparam;
+	unsigned char *aidnum;
+	CAPK_STRUCT *emvcapk;
+	CAPK_STRUCT *termcapk;
+	unsigned char *termcapknum;
+	IPK_REVOKE *emvTermIPKRevoke;
+	unsigned char *emvTermIPKRevokeNum;
+	unsigned int *TempTransNum;
+	unsigned short *TempIndexEnd;
+	unsigned char *TempRecordIndex;
+	TRANS_LOG *TempTermTransLog;
+	APDU_RESP *Termapdu_r;
+	APDU_SEND *Termapdu_s;
+	EMVSTATE *emvstate;
+	LOCALVARIBLE *localvar;
+	PAYPASSPREPROCEFLAG *paypassproceflag;
+	OUTPARAMETERSET *pOutParameterSet;
+	USERINTERFACEREQDATA *pUserInterfaceReqData;
+	ERRORID              *pErrorID;
+	core_checkifcardintornlog checkifcardintornlog;
+	core_RECOVERAC       RECOVERAC;
+	core_deletetornlog   deletetornlog;
+	core_addtornlog      addtornlog;
+	PHONEMESSAGETABLEINFO *pphonemsgtable;
+}AppUnionStruct;
+
+
+
+//将需要认证的数据放到最前面，加快读取速度
+//paypass recovery data
+#define TORNRECORDFLAG   "\x55\aa\x66\xbb"
+typedef struct _TornTransactionLogRecord{
+        unsigned char flag[4];          //\x55\xaa\x55\xaa说明有记录
+        unsigned char recordseqnum[6];
+		unsigned char AmtAuthNum[6];    //tag'9F02' Authorised amount of BCD numeric
+		unsigned char AmtOtherNum[6];         //tag'9F03' Other(cashback) amount of BCD numeric
+		unsigned char PANLen;
+		unsigned char PAN[10];
+		unsigned char PANSeq;					//identify card with same pan.
+		unsigned char PayPassPreBalance[6];     //paypass tag '9f50'  jiguang 20121220 add
+		unsigned char CDOL1RelatedLen; 
+		unsigned char CDOL1RelatedData[256];  //最大长度暂定这么多
+		unsigned char CVMResult[3];			//tag'9F34' cardholder verification methods perform result
+		unsigned char DRDOLRelatedLen; 
+		unsigned char DRDOLRelatedData[256];  //最大长度暂定这么多
+		unsigned char DSSummary1Len;    //8  or 16
+		unsigned char DSSummary1[16];
+		unsigned char IDSStatus;
+		unsigned char InterfaceDeviceSerialNumber[8];
+		unsigned char PDOLRelatedLen;
+		unsigned char PDOLRelatedData[256];
+		unsigned char ReferenceControlParameter;
+		unsigned char TermCapab[3];			  //tag'9F33' terminal capability
+		unsigned char CountryCode[2];		  //tag'9F1A' Terminal country code BCD
+		unsigned char TermType;				  //tag'9F35' Terminal type
+		unsigned char TVR[5];				  //tag'95'   Terminal Verification Results
+		unsigned char TransCateCode;          //tag '9F53' Transaction Category Code, Mastercard M/Chip private data.
+		unsigned char TransCurcyCode[2];      //tag'5F2A'
+		unsigned char TransDate[3];           //tag'9A'   YYMMDD
+		unsigned char TransTime[3];           //tag'9F21',HHMMSS,BCD
+		unsigned char TransTypeValue;         //tag'9C',
+		unsigned char UnpredictNum[4];        //tag'9F37' Terminal created for each transaction.
+		unsigned char Reserved[1024 - position_of(TERMINFO,UnpredictNum) - 6];
+		unsigned char crc[2];
+}ATTRIBUTE TornTransactionLogRecord;
+
+
+
+
+typedef struct
+{
+	unsigned int index;
+	unsigned int exit;
+	unsigned char PANLen;
+	unsigned char PAN[10];
+	unsigned char PANseq;
+	unsigned char recordseqnum[6];
+}TORNTRANSACTIONMAP;
+
+
+
+typedef struct _TORNTRANSACTIONMAPLIST
+{
+	TORNTRANSACTIONMAP TornTransactionInfo;
+	struct _TORNTRANSACTIONMAPLIST *next;
+}TORNTRANSACTIONMAPLIST;
+
+
+typedef struct
+{
+	unsigned char *flashusedflag;
+	unsigned int  TornMaxNum;
+	unsigned int currentusedindex;
+	TORNTRANSACTIONMAPLIST *tornhead;
+}TORNTRANSACTIONMAPTOTALINFO;
+
+
+
+
+
+
+
+
+//=电子现金 NowTask ectrade huxiang add for EC-------
+#define EMV_EC_CASH				0x2000      					//现金充值
+#define EMV_EC_QCACC			 	0x2001      					//指定账户圈存
+#define EMV_EC_QCACCNO			0x2002      					//非指定账户圈存
+#define EMV_READLOG      		0x2003      					//读日志
+#define PAYWAVE_CASH            0x2004
+/*******************************************************
+定义的变量      2008-03-31 宋孝亮
+修改信息:
+
+********************************************************/
+
+
+ 
+
+/*******************************************************
+基本函数        2008-03-31 宋孝亮
+修改信息:
+********************************************************/
+//2.1.1 解析TAG数据的长度
+
+
+
+/*******************************************************
+应用选择函数        2008-03-31 宋孝亮
+修改信息:
+********************************************************/
+//3.1.1 解析选择文件卡应答
+unsigned char Emv_ReadSelectRetData(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,CARDINFO *termpcardinfo);
+//3.1.2 终端应用列表匹配
+int Emv_MatchTermAID(unsigned char* aid,unsigned char aidLen,TERMAPP *Applist,unsigned char listnum);
+unsigned char PostReadAFL(AppUnionStruct *tempApp_UnionStruct,unsigned char *tempRead_AFL_Num,unsigned char *tempAFL_RecordNum);
+void Emv_FormReadAflData(AppUnionStruct *tempApp_UnionStruct,APDU_SEND *apdu_s,unsigned char *tempRead_AFL_Num,unsigned char *tempAFL_RecordNum);
+unsigned char Emv_ReadAFLRetData(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r,unsigned char *tempRead_AFL_Num,unsigned char *tempAFL_RecordNum);
+unsigned char Emv_GetAppMatchNo(unsigned char CandidateNo,APPDATA *tempappdata,TERMAPP *temptermapp,unsigned char termappnum);
+void EmvAidToTermInfo(unsigned char i,TERMINFO *termterminfo,EmvSysIni_STRUCT *termaidparam,unsigned char onlinepinsup);
+unsigned char Emv_SelectDDF(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+unsigned char Emv_SelectDDFReadRecord(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+unsigned char EMVStrPos(unsigned char *Src,unsigned char chr );
+unsigned char Emv_initDynamicAuth(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_CheckDataMissSDA(AppUnionStruct *tempApp_UnionStruct,DATAELEMENT *tempiccdatatable);
+unsigned char Emv_CheckDateFormat(unsigned char * date);
+unsigned char OnlineEncPIN(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_StaticAuth(AppUnionStruct *tempApp_UnionStruct);
+
+void COMMAND_SELECT(unsigned char *DFFileName,unsigned char DFFileNameLen,unsigned char nextflag,APDU_SEND *apdu_s);
+unsigned char Emv_FinalSelectedApp(AppUnionStruct *App_UnionStruct);
+unsigned char Emv_UserSelectResult(AppUnionStruct *App_UnionStruct);
+unsigned char Emv_RebuildApplist(AppUnionStruct *App_UnionStruct);
+unsigned char Emv_ProcessRestrict(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_CardHolderVerf(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_TermRiskManage(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_UnableGoOnlineDeal(AppUnionStruct *tempApp_UnionStruct,unsigned short *nowtask);
+unsigned char Emv_TransComplete(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_PreTransComplete(AppUnionStruct *tempApp_UnionStruct);
+void EmvIccIsoCommand(APDU_SEND *ApduSend,APDU_RESP *apdu_r);
+void IccIsoCommand(APDU_SEND *ApduSend,APDU_RESP *apdu_r,unsigned char EnableCancel);      //发送数据包后等待回数据
+void InitLocalVarible(AppUnionStruct *tempApp_UnionStruct);
+unsigned char EMV_AppSelect(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_ChooseContactApp(AppUnionStruct *App_UnionStruct);
+unsigned char Emv_ChooseApp(AppUnionStruct *App_UnionStruct);
+unsigned char Emv_InitialApp(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_ReadAppData(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_DataAuth(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_TermiAnalys(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_TransProcess(AppUnionStruct *tempApp_UnionStruct);     //交易处理流程
+void PostReadReocrd(APDU_SEND *apdu_s,unsigned char sfi,unsigned char record_num);
+unsigned char Emv_OnLineDeal(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_ExpireDateVerify(unsigned char* ExpireDate,TERMINFO *tempterminfo);
+unsigned char Emv_GetCAPK(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_GetIPK(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_GetICCPK(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_DOLProcess(unsigned char type, unsigned char * DOL,unsigned short DOLLen,unsigned char* DOLData,unsigned short* DOLDataLen,AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_FillSDA(unsigned char* SDAData,SIGN_DYN_APPDATA_RECOVER* recovSDA,unsigned char tempICCPKModulLen);
+unsigned char  EMV_FinalSelectRetData(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+void Emvdes(unsigned char *input,unsigned char *output,unsigned char *deskey,int flag);
+void EmvDesEncrypt(short encrypt, unsigned char* datat, unsigned char* keyt);
+
+extern unsigned char qPBOC_PreTrans(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_SelectApp(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_SelectDF(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char qPBOC_SelectDFRetData(unsigned char indexDF,SELECT_RET* selectRet,APDU_RESP *apdu_r,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char qPBOC_ReadSelectRetData(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char qPBOC_ChooseApp(AppUnionStruct *App_UnionStruct);
+extern unsigned char qPBOC_ChooseAppList(AppUnionStruct *tempApp_UnionStruct,unsigned char *AppPriority,unsigned char *AppSeq,unsigned char *seqtype);
+extern unsigned char qPBOC_FinalSelectedApp(AppUnionStruct *App_UnionStruct);
+extern unsigned char qPBOC_FinalSelect(AppUnionStruct *App_UnionStruct);
+extern unsigned char  qPBOC_FinalSelectRetData(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_InitialApp(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_GPORetData(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r);
+extern unsigned char qPBOC_AacRefuse(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_DataAuth(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_ReadAppData(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_DealAFLData(AppUnionStruct *tempApp_UnionStruct);
+extern void EmvPrintFormat(unsigned char *src,unsigned short Len);
+extern unsigned char qPBOC_OnLineDeal(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_CardHolderVerf(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_CheckExpDate(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char MSD_ConstraintParam(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_FinalReadSelectRetData(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char qPBOC_PDOLProcess(AppUnionStruct *tempApp_UnionStruct,APDU_SEND *apdu_s);
+extern unsigned char qPBOC_GetAppCandidate(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_ProcessRestrict(AppUnionStruct *tempApp_UnionStruct);
+extern void EmvBcdSub(unsigned char *Dest,unsigned char *Src,unsigned char Len);
+extern void EMVBcdAdd(unsigned char *Dest,unsigned char *Src,unsigned char Len);
+extern void qPBOCIccIsoCommand(APDU_SEND *ApduSend,APDU_RESP *apdu_r); 
+extern unsigned char Emv_ReadEcData(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Emv_CommandReadECCashBalance(APDU_SEND *apdu_s);
+extern unsigned char Emv_CommandReadECResetThreshold(APDU_SEND *apdu_s);
+extern unsigned char Emv_ReadMaxECCashBalance(APDU_SEND *apdu_s);
+extern unsigned char CheckReadAFL(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char qPBOC_ReadAFLRetData(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r,unsigned char *tempRead_AFL_Num,unsigned char *tempAFL_RecordNum);
+
+
+//sxl add paypass
+extern unsigned char Paypass_GetAppCandidate(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_SelectApp(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_SelectDF(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char Paypass_SelectDFRetData(unsigned char indexDF,SELECT_RET* selectRet,APDU_RESP *apdu_r,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char Paypass_ReadSelectRetData(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char Paypass_ChooseApp(AppUnionStruct *App_UnionStruct);
+extern unsigned char Paypass_ChooseAppList(AppUnionStruct *tempApp_UnionStruct,unsigned char *AppPriority,unsigned char *AppSeq,unsigned char *seqtype);
+extern unsigned char Paypass_FinalSelectedApp(AppUnionStruct *App_UnionStruct);
+extern unsigned char Paypass_FinalSelect(AppUnionStruct *App_UnionStruct);
+extern unsigned char  Paypass_FinalSelectRetData(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_FinalReadSelectRetData(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+extern unsigned char Paypass_InitialApp(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_ReadAppData(AppUnionStruct *tempApp_UnionStruct);
+extern void Paypass_checkavn(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_computecryptochecksum(AppUnionStruct *tempApp_UnionStruct);
+void Paypass_odamethodselect(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paypass_DataAuth(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paypass_TermRiskManage(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paypass_TermiAnalys(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paypass_TransProcess(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paywave_GetAppCandidate(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paywave_ChooseApp(AppUnionStruct *App_UnionStruct);
+unsigned char Paywave_FinalSelectedApp(AppUnionStruct *App_UnionStruct);
+unsigned char Paywave_InitialApp(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paywave_ReadAppData(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paywave_ProcessRestrict(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paywave_DataAuth(AppUnionStruct *tempApp_UnionStruct);
+unsigned char qPBOC_DynSignVerify(AppUnionStruct *tempApp_UnionStruct);	
+unsigned char Paywave_UnableGoOnlineDeal(AppUnionStruct *tempApp_UnionStruct,unsigned short *nowtask);
+unsigned char Paywave_OnLineDeal(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_DealIssuerAuthenData(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_ReadScript(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_SendScriptCommand(unsigned char* Script,unsigned char ScriptLen,APDU_SEND *apdu_s);
+unsigned char Emv_CombineDDA_FirstHalf(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_DynSignGenerate(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r);
+unsigned char Emv_DynSignVerify(AppUnionStruct *tempApp_UnionStruct);	
+unsigned char Emv_TermActAnaly(AppUnionStruct *tempApp_UnionStruct);
+unsigned char AacRefuse(AppUnionStruct *tempApp_UnionStruct);
+unsigned char TcOffLine(AppUnionStruct *tempApp_UnionStruct);
+unsigned char ArQcOnline(AppUnionStruct *tempApp_UnionStruct);
+unsigned char paypass_dataauthaftergac(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Paypass_CardHolderVerf(AppUnionStruct *tempApp_UnionStruct);
+unsigned char AnalyCvmlist(AppUnionStruct *tempApp_UnionStruct);
+unsigned char Emv_CombineDDA(unsigned char type,AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char manage_paypassresvervedparameters(unsigned char *reversedparams,unsigned int reversedparamslen,TERMINFO *tmpterminfo);
+//============jiguang 20121217============
+extern void Paypass_SetErrPar(unsigned char SWA,unsigned char SWB);
+extern unsigned char Paypass_SetTermCFLEF(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_preGenACBalanceRead(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char  Paypass_ReadPreBalanceRetData(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_RECOVERAC(TornTransactionLogRecord *temptorntranslogrecord,unsigned char *DOL,unsigned short DOLLen,APDU_SEND *apdu_s);
+extern unsigned char Paypass_afterGenACBalanceRead(AppUnionStruct *tempApp_UnionStruct);
+extern void Paypass_SetErrPar(AppUnionStruct *tempApp_UnionStruct,unsigned int step);
+extern void Paypass_packoutsignal(AppUnionStruct *tempApp_UnionStruct,unsigned int step);
+extern unsigned char Paypass_MSCheckCVM(AppUnionStruct *tempApp_UnionStruct);
+extern unsigned char Paypass_TornRecordread(unsigned int index,TornTransactionLogRecord *torntransactionlogrecord);
+extern unsigned char Paypass_TornRecordsave(unsigned int index,TornTransactionLogRecord *torntransactionlogrecord);
+extern unsigned char paypass_checkifcardintornlog(void);
+extern unsigned char Paypass_RECOVERAC(unsigned char *DOL,unsigned short DOLLen,APDU_SEND *apdu_s);
+extern u8 paypass_deletetornlog(void);
+extern void Paypass_addtornlog(AppUnionStruct *tempApp_UnionStruct);
+
+
+
+
+
+struct _LibXgdEmvApiTbl
+{
+	unsigned char (*Emv_ReadSelectRetData)(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,CARDINFO *termpcardinfo);
+	int (*Emv_MatchTermAID)(unsigned char* aid,unsigned char aidLen,TERMAPP *Applist,unsigned char listnum);
+	unsigned char (*Emv_SelectDDF)(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*Emv_SelectDDFReadRecord)(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+	void (*COMMAND_SELECT)(unsigned char *DFFileName,unsigned char DFFileNameLen,unsigned char nextflag,APDU_SEND *apdu_s);
+	unsigned char (*Emv_FinalSelectedApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Emv_UserSelectResult)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Emv_RebuildApplist)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Emv_ProcessRestrict)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_CardHolderVerf)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_TermRiskManage)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_UnableGoOnlineDeal)(AppUnionStruct *tempApp_UnionStruct,unsigned short *nowtask);
+	unsigned char (*Emv_PreTransComplete)(AppUnionStruct *tempApp_UnionStruct);
+	void (*InitLocalVarible)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*EMV_AppSelect)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_ChooseContactApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Emv_ChooseApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Emv_InitialApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_ReadAppData)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_DataAuth)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_TermiAnalys)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_TransProcess)(AppUnionStruct *tempApp_UnionStruct);	 //交易处理流程
+	void (*PostReadReocrd)(APDU_SEND *apdu_s,unsigned char sfi,unsigned char record_num);
+	unsigned char (*Emv_OnLineDeal)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_ExpireDateVerify)(unsigned char* ExpireDate,TERMINFO *tempterminfo);
+	unsigned char (*Emv_GetCAPK)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_GetIPK)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_GetICCPK)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_DOLProcess)(unsigned char type, unsigned char * DOL,unsigned short DOLLen,unsigned char* DOLData,unsigned short* DOLDataLen,AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_FillSDA)(unsigned char* SDAData,SIGN_DYN_APPDATA_RECOVER* recovSDA,unsigned char tempICCPKModulLen);
+	unsigned char  (*EMV_FinalSelectRetData)(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+	void (*Emvdes)(unsigned char *input,unsigned char *output,unsigned char *deskey,int flag);
+	void (*EmvDesEncrypt)(short encrypt, unsigned char* datat, unsigned char* keyt);
+	void (*EMVIntToByteArray)(unsigned long var,unsigned char* buf,unsigned char bufLen);
+	unsigned char (*EMVCalcBcc)(unsigned char *src,unsigned int num );
+	unsigned long (*EMVByteArrayToInt)(unsigned char* buf,unsigned char bufLen);
+	void (*EMVBcdToU32)(unsigned int *Dest,unsigned char *Bcd,unsigned char Len);
+	void (*EMVU32ToBcd)(unsigned char *Bcd, unsigned int const Src,unsigned char Len);
+	void (*EMVU16ToBcd)(unsigned char *Bcd, unsigned short const Src,unsigned char Len);
+	void (*GetLibEmvVersion)(unsigned char* kernelVer);
+	unsigned char (*EMVIsAscii)(unsigned char *Src);
+	void (*EMVAscToBcd)(unsigned char *Dest,unsigned char *Src,unsigned short Len);
+	unsigned char (*EMVasc_to_byte)(unsigned char *asc);
+	void (*EMVBcdToAsc)(unsigned char *Dest,unsigned char *Src,unsigned short Len);
+	void (*EMVBcdToU16)(unsigned short *Dest,unsigned char *Bcd,unsigned char Len);
+	void (*EMVbcd_to_asc)(unsigned char *asc, unsigned char *bcd,unsigned int asc_len);
+	unsigned char (*ParseExtLen)(unsigned char *ParseData,unsigned short *index,unsigned short *DataLen);
+	void (*Emv_srand)(unsigned short rand);
+	unsigned short (*Emv_rand)(void);
+	void (*Emv_PIN_asc_to_bcd)(unsigned char *bcd, unsigned char *asc, unsigned char asc_len);
+	void (*Hash)(unsigned char* bb,unsigned long len,unsigned char* Message_Digest);
+	unsigned char (*RSARecover)(unsigned char *m, unsigned int mLen, unsigned char *e, unsigned int eLen,unsigned char *input,unsigned char *output);
+
+	unsigned char (*qPBOC_PreTrans)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_SelectApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_SelectDF)(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*qPBOC_SelectDFRetData)(unsigned char indexDF,SELECT_RET* selectRet,APDU_RESP *apdu_r,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*qPBOC_ReadSelectRetData)(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*qPBOC_ChooseApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*qPBOC_ChooseAppList)(AppUnionStruct *tempApp_UnionStruct,unsigned char *AppPriority,unsigned char *AppSeq,unsigned char *seqtype);
+	unsigned char (*qPBOC_FinalSelectedApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*qPBOC_FinalSelect)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*qPBOC_FinalSelectRetData)(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_InitialApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_GPORetData)(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r);
+	unsigned char (*qPBOC_AacRefuse)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_DataAuth)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_ReadAppData)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_DealAFLData)(AppUnionStruct *tempApp_UnionStruct);
+	void (*EmvPrintFormat)(unsigned char *src,unsigned short Len);
+	unsigned char (*qPBOC_OnLineDeal)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_CardHolderVerf)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_CheckExpDate)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*MSD_ConstraintParam)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_FinalReadSelectRetData)(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*qPBOC_PDOLProcess)(AppUnionStruct *tempApp_UnionStruct,APDU_SEND *apdu_s);
+	unsigned char (*qPBOC_GetAppCandidate)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_ProcessRestrict)(AppUnionStruct *tempApp_UnionStruct);
+	void (*EmvBcdSub)(unsigned char *Dest,unsigned char *Src,unsigned char Len);
+	void (*qPBOCIccIsoCommand)(APDU_SEND *ApduSend,APDU_RESP *apdu_r); 
+	unsigned char (*Emv_ReadEcData)(AppUnionStruct *tempApp_UnionStruct);
+    
+    
+	//sxl paypass
+	unsigned char (*Paypass_GetAppCandidate)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_SelectApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_SelectDF)(unsigned char indexDF,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*Paypass_SelectDFRetData)(unsigned char indexDF,SELECT_RET* selectRet,APDU_RESP *apdu_r,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*Paypass_ReadSelectRetData)(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*Paypass_ChooseApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Paypass_ChooseAppList)(AppUnionStruct *tempApp_UnionStruct,unsigned char *AppPriority,unsigned char *AppSeq,unsigned char *seqtype);
+	unsigned char (*Paypass_FinalSelectedApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Paypass_FinalSelect)(AppUnionStruct *App_UnionStruct);
+	unsigned char (* Paypass_FinalSelectRetData)(APDU_RESP *apdu_r,AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_FinalReadSelectRetData)(SELECT_RET* selectRet,unsigned char* DataOut,unsigned short LenOut,AppUnionStruct *tempAppUnionStruct);
+	unsigned char (*Paypass_InitialApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_ReadAppData)(AppUnionStruct *tempApp_UnionStruct);
+	void (*Paypass_checkavn)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_computecryptochecksum)(AppUnionStruct *tempApp_UnionStruct);
+	void (*Paypass_odamethodselect)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_DataAuth)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_TermRiskManage)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_TermiAnalys)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_TransProcess)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_GetAppCandidate)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_ChooseApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Paywave_FinalSelectedApp)(AppUnionStruct *App_UnionStruct);
+	unsigned char (*Paywave_InitialApp)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_ReadAppData)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_ProcessRestrict)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_DataAuth)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*qPBOC_DynSignVerify)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paywave_UnableGoOnlineDeal)(AppUnionStruct *tempApp_UnionStruct,unsigned short *nowtask);
+	unsigned char (*Paywave_OnLineDeal)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_DealIssuerAuthenData)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_ReadScript)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_SendScriptCommand)(unsigned char* Script,unsigned char ScriptLen,APDU_SEND *apdu_s);
+	unsigned char (*Emv_CombineDDA_FirstHalf)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_DynSignGenerate)(AppUnionStruct *tempApp_UnionStruct,APDU_RESP *apdu_r);
+	unsigned char (*Emv_DynSignVerify)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Emv_TermActAnaly)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*AacRefuse)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*TcOffLine)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*ArQcOnline)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*paypass_dataauthaftergac)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*Paypass_CardHolderVerf)(AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*AnalyCvmlist)(AppUnionStruct *tempApp_UnionStruct)	;
+	unsigned char (*Emv_CombineDDA)(unsigned char type,AppUnionStruct *tempApp_UnionStruct);
+	unsigned char (*manage_paypassresvervedparameters)(unsigned char *reversedparams,unsigned int reversedparamslen,TERMINFO *tmpterminfo);
+};
+
+#endif
+

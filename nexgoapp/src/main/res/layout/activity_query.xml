@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <LinearLayout
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="120dp"
+                android:text="@string/card_no"
+                android:textColor="#000000"
+                android:layout_marginEnd="10dp"
+                android:textSize="20sp"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_marginStart="10dp"
+                android:id="@+id/tv_cardnumber_query"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:text="621792******0880"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="120dp"
+            android:text="@string/CardBalance"
+            android:textColor="#000000"
+            android:layout_marginEnd="10dp"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:layout_marginStart="10dp"
+            android:id="@+id/tv_balance"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:textColor="#F21D3E"
+            android:text="0.00"
+            android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_marginStart="10dp"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:textColor="#F21D3E"
+                android:text="@string/rmb"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <Button
+            android:layout_marginTop="40dp"
+            android:id="@+id/bt_cancel_query"
+            android:layout_width="100dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_height="wrap_content"
+            android:textColor="@drawable/fontselector_prep_next"
+            android:background="@drawable/btn_selector"
+            android:text="@string/back"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

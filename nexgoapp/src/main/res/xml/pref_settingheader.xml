@@ -1,0 +1,15 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header
+        android:fragment="com.xgd.umsapp.activity.SettingsActivity$BusinessPreferenceFragment"
+        android:title="@string/pref_header_business"/>
+    <!--<header-->
+        <!--android:fragment="com.nexgo.ump.activity.SettingsActivity$KeyPreferenceFragment"-->
+        <!--android:title="@string/pref_header_key"/>-->
+    <header
+        android:fragment="com.xgd.umsapp.activity.SettingsActivity$NetPreferenceFragment"
+        android:title="@string/pref_header_net"/>
+    <header
+        android:fragment="com.xgd.umsapp.activity.SettingsActivity$PossystemPreferenceFragment"
+        android:title="@string/pref_header_possystem"/>
+</preference-headers>

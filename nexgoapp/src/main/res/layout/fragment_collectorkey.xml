@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:orientation="vertical"
+              android:layout_height="match_parent">
+    <EditText
+        android:id="@+id/et_collectorpassword_fragment"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="250dp"
+        android:background="@drawable/bg_password_edittext"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:hint="@string/please_input_manager_password"
+        android:layout_marginTop="30dp"
+        android:maxLength="16"
+        android:focusableInTouchMode="false"
+        android:inputType="numberPassword"
+        android:layout_height="50dp"/>
+
+    <com.xgd.umsapp.view.InputView
+        android:id="@+id/inputview_fragment"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_weight="8"
+        android:layout_height="0dp"/>
+    <Button
+        android:id="@+id/button_confirm"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:text="@string/button_confirm"
+        android:textColor="@drawable/selector_font_appsetting"
+        android:background="@drawable/btn_selector"
+        android:layout_height="0dp"/>
+
+</LinearLayout>

@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">TransFlow</string>
+
+
+    <!-- 确认卡号-->
+    <string name="amtflag">\t元</string>
+    <string name="readcarderr">读卡错误，请重刷</string>
+    <!-- IC 提示-->
+    <string name="useic">本卡为IC卡，请插卡或挥卡</string>
+    <string name="plsinsercard">本卡为IC卡，请插卡</string>
+    <string name="icoperating">读卡中，请稍等</string>
+
+    <!-- 消费辙销提示-->
+    <string name="errcardno">与原交易卡号不一致</string>
+    //电子签名
+    <string name="finish">完成</string>
+    <string name="clear">清除</string>
+    <!--交易ID定义-->
+    <string name="SignInID">trade_id_signin</string>        <!--签到-->
+    <string name="SaleID">trade_id_sale</string>            <!--消费-->
+    <string name="QueryID">trade_id_query</string>            <!--查余-->
+    <string name="SettleID">trade_id_settle</string>        <!--结算-->
+    <string name="UnSaleID">trade_id_unsale</string>       <!--消费撤销-->
+    <string name="RefundID">trade_id_refund</string>        <!--退货-->
+    <string name="ReversalID">trade_id_Reversal</string>    <!--冲正-->
+    <string name="ICParamID">trade_id_ICParamID</string>     <!--IC参数下载-->
+    <string name="Preauth">trade_id_preauth</string>     <!--预授权-->
+    <string name="Unpreauth">trade_id_unpreauth</string>     <!--预授权撤销-->
+    <string name="Complete">trade_id_complete</string>     <!--预授权完成请求-->
+    <string name="Uncomplete">trade_id_uncomplete</string>     <!--预授权完成撤销-->
+    <string name="Offcomplete">trade_id_Offcomplete</string>     <!--预授权完成通知-->
+    <string name="EC_SaleID">trade_id_ec</string>     <!--电子现金消费-->
+    <string name="EC_QueryID">trade_id_ecquery</string>     <!--电子现金查询-->
+    <string name="EC_CashID">trade_id_eccash</string>     <!--电子现金现金充值-->
+    <string name="EC_UncashID">trade_id_uneccash</string>     <!--电子现金充值撤销-->
+    <string name="EC_CaccID">trade_id_eccacc</string>     <!--电子现金指定账户圈存-->
+    <string name="EC_CaccnoID">trade_id_eccaccno</string>     <!--电子现金非指定账户圈存-->
+
+    <string name="Point_Bank_SaleID">trade_id_pointbanksale</string>     <!--发卡行积分消费-->
+    <string name="Point_Union_SaleID">trade_id_pointunionsale</string>     <!--联盟积分消费-->
+    <string name="Point_Bank_VoidID">trade_id_pointbankvoid</string>     <!--发卡行积分消费辙销-->
+    <string name="Point_Union_VoidID">trade_id_pointuionvoid</string>     <!--联盟积分消费辙销-->
+    <string name="Point_Uion_QueryID">trade_id_pointuionquery</string>     <!--联盟积分查询-->
+    <string name="Point_Uion_RefundID">trade_id_pointuionrefund</string>     <!--联盟积分退货-->
+
+
+
+</resources>

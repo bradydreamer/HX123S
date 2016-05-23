@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/buiness">
+
+        <EditTextPreference
+            android:defaultValue="@string/Init_MerchantName"
+            android:inputType="text"
+            android:key="MerchantName_text"
+            android:maxLines="1"
+            android:maxLength="20"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/merchant_name_input"/>
+        <EditTextPreference
+            android:defaultValue="@string/Init_MerchantNo"
+            android:inputType="text"
+            android:digits="0123456789"
+            android:key="MerchantNO_text"
+            android:maxLines="1"
+            android:maxLength="15"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/merchantno_input"/>
+
+    <EditTextPreference
+        android:defaultValue="@string/Init_TerminalNo"
+        android:inputType="text"
+        android:digits="0123456789"
+        android:key="TerminalNO_text"
+        android:maxLines="1"
+        android:maxLength="8"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/terminalno_input"/>
+    <EditTextPreference
+        android:defaultValue="@string/Init_Voucherno"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:key="VoucherNO_text"
+        android:maxLines="1"
+        android:maxLength="6"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/voucherno_input"/>
+    <EditTextPreference
+        android:defaultValue="123456"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:key="BatchNO_text"
+        android:maxLines="1"
+        android:maxLength="6"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/batchno_input"/>
+</PreferenceScreen>

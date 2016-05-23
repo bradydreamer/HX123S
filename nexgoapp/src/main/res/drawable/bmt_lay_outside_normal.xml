@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 空心圆角矩形 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle" >
+
+    <corners android:radius="8dp" />
+    <!-- 圆角角度 -->
+    <stroke
+        android:dashGap="0dp"
+        android:dashWidth="1dp"
+        android:width="2dp"
+        android:color="#999999" />
+    
+    <!-- 描边 -->
+    <gradient
+        android:endColor="#FFFFFF"
+        android:startColor="#FFFFFF" />
+
+</shape>

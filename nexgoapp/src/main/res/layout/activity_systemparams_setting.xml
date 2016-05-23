@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:background="#F5EFF0"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+
+        android:background="#ffffff"
+        android:layout_height="@dimen/base_setting_hight">
+        <TextView
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/voucherno_input"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:textSize="@dimen/base_setting_textSize"
+            />
+        <EditText
+            android:id="@+id/et_sysparams_voucher"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:inputType="number"
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:hint="@string/PleaseInput_Voucher"
+            android:textSize="@dimen/fontsize"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"/>
+        <View android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#292425"
+            />
+    </LinearLayout>
+    <View android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#292425"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+
+        android:background="#ffffff"
+        android:layout_height="@dimen/base_setting_hight">
+        <TextView
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/batchno_input"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:textSize="@dimen/fontsize"
+            />
+        <EditText
+            android:id="@+id/et_sysparams_batch"
+            android:layout_marginStart="@dimen/base_setting_marginLeft"
+            android:inputType="number"
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:hint="@string/PleaseInput_Batch"
+            android:textSize="@dimen/fontsize"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <View android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#292425"
+        />
+
+
+</LinearLayout>

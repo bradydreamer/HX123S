@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/possytem">
+    <EditTextPreference
+        android:defaultValue="123456"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:key="SecurePwd_text"
+        android:maxLines="1"
+        android:maxLength="6"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/SecurePwd"/>
+    <EditTextPreference
+        android:defaultValue="@string/Init_TmkIndex"
+        android:inputType="text"
+        android:digits="0123456789"
+        android:key="FF8016"
+        android:maxLines="1"
+        android:maxLength="2"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/TerminalKeyIndex"/>
+    <EditTextPreference
+        android:defaultValue="@string/Init_MK"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:key="MK_text"
+        android:maxLines="2"
+        android:maxLength="32"
+        android:selectAllOnFocus="true"
+        android:title="@string/MK"/>
+    <EditTextPreference
+        android:defaultValue="10000"
+        android:inputType="text"
+        android:digits="0123456789."
+        android:key="MaxRefundAmount_text"
+        android:maxLines="1"
+        android:maxLength="12"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/MaxRefundAmount"/>
+    <EditTextPreference
+        android:defaultValue="中国银联"
+        android:inputType="text"
+        android:key="VoucherTitleSetting_text"
+        android:maxLines="1"
+        android:maxLength="20"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/VoucherTitleSetting"/>
+    <ListPreference
+        android:defaultValue="00"
+        android:entries="@array/DefaultTrade_titles"
+        android:entryValues="@array/DefaultTrade_values"
+        android:key="DefaultTrade_list"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/DefaultTrade"/>
+        />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="SaleRevokeNeedCard_bool"
+        android:title="@string/SaleRevokeNeedCard" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="SaleRevokeNeedPwd_bool"
+        android:title="@string/SaleRevokeNeedPwd" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="PreauthCompleteRevokeNeedCard_bool"
+        android:title="@string/PreauthCompleteRevokeNeedCard" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="PreauthCompleteRevokeNeedPwd_bool"
+        android:title="@string/PreauthCompleteRevokeNeedPwd" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="PreauthCompleteNeedPwd_bool"
+        android:title="@string/PreauthCompleteNeedPwd" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="PreauthRevokeNeedPwd_bool"
+        android:title="@string/PreauthRevokeNeedPwd" />
+
+</PreferenceScreen>

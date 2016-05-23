@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical" >
+
+            <RelativeLayout
+                android:layout_width="200dp"
+                android:layout_height="140dp"
+                android:background="@drawable/bg_password_edittext"
+                android:layout_centerInParent="true">
+                <TextView
+                    android:id="@+id/tvsigntitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="确认"
+                    android:textSize="@dimen/Tilte_text_size"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="确认签到"
+                    android:layout_marginTop="5dp"
+                    android:layout_below="@+id/tvsigntitle"
+                    android:textSize="@dimen/small_text_size"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""/>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="15dp">
+                    <Button
+                        android:id="@+id/login_in"
+                        android:layout_centerInParent="true"
+                        android:layout_width="80dp"
+                        android:layout_height="30dp"
+                        android:layout_marginRight="10dp"
+                        android:background="@color/colorsys"
+                        android:textColor="@color/white"
+                        android:onClick="onClick"
+                        android:text="签到"/>
+                    <Button
+                        android:id="@+id/cancel"
+                        android:layout_width="80dp"
+                        android:layout_height="30dp"
+                        android:layout_marginLeft="10dp"
+                        android:text="取消"
+                        android:textColor="@color/white"
+                        android:onClick="onClick"
+                        android:layout_alignTop="@+id/login_in"
+                        android:layout_toEndOf="@+id/login_in"
+                        android:background="@color/colorAccent"/>
+                </LinearLayout>
+
+
+
+            </RelativeLayout>
+</RelativeLayout>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal" 
+    android:paddingTop="30dp">
+
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/downloadTerminalParam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="加载终端参数"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/downloadkey" />
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/downloadkey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="手工下载传输密钥"
+        android:layout_marginLeft="30dp"
+        android:layout_marginStart="32dp"
+        android:layout_below="@+id/downloadTerminalParam"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/downloadPMK"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="联机下载主密钥"
+        android:layout_marginLeft="30dp"
+        android:layout_below="@+id/downloadkey"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/signIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="签到"
+        android:layout_marginRight="49dp"
+        android:layout_below="@+id/downloadPMK"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="53dp" />
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="定位"
+        android:layout_marginRight="49dp"
+        android:layout_below="@+id/downloadPMK"
+        android:layout_toEndOf="@+id/downloadPMK" />
+
+    <EditText
+        android:id="@+id/sum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="请输入消费金额"
+        android:layout_alignBottom="@+id/consume"
+        android:layout_alignStart="@+id/downloadkey"
+        android:layout_toStartOf="@+id/consume" />
+    <Button
+        android:onClick="onClick"
+        android:id="@+id/consume"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="消费"
+        android:layout_centerVertical="true"
+        android:layout_alignStart="@+id/signIn" />
+
+
+</RelativeLayout>

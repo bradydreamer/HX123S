@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.hxb.pos.device">
+
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
+    <application
+        android:name=".NexgoApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <service
+            android:name=".service.TransactionControllerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="hxb.intent.action.transactionController" />
+            </intent-filter>
+        </service>
+        <activity android:name=".activity.SigninActivity"></activity>
+        <activity android:name=".activity.SaleActivity"></activity>
+        <activity android:name=".activity.ReadCardActivity"></activity>
+        <activity android:name=".activity.ResponseResultActivity"></activity>
+        <activity android:name=".activity.LoadTransportkeyActivity"></activity>
+        <activity android:name=".activity.LoadPrimaryKeyActivity"></activity>
+        <activity android:name=".activity.LocationActivity"></activity>
+    </application>
+
+</manifest>

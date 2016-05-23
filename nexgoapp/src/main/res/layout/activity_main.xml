@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.xgd.umsapp.view.DragLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@mipmap/bg"
+    android:id="@+id/draglayout"
+   >
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/leftcontent"/>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+    <com.xgd.umsapp.view.MyFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#195955"
+        android:id="@+id/maincontent"/>
+</com.xgd.umsapp.view.DragLayout>

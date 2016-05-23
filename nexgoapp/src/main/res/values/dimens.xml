@@ -1,0 +1,31 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="normal_text_size">22sp</dimen>
+    <dimen name="small_text_size">15sp</dimen>
+    <dimen name="Tilte_text_size">30sp</dimen>
+    <dimen name="normal_margin">10dp</dimen>
+
+    <dimen name="topmenu_height">40dp</dimen>
+    <dimen name="settle_title_text_size">20sp</dimen>
+    <dimen name="settle_normal_text_size">13sp</dimen>
+    <dimen name="settle_small_text_size">10sp</dimen>
+    <dimen name="normal_top">15dp</dimen>
+    <dimen name="normal_end">30dp</dimen>
+    <dimen name="normal_right">20dp</dimen>
+
+    <!--系统baselayout设置-->
+    <dimen name="base_setting_marginLeft">10dp</dimen>
+    <dimen name="base_setting_marginRight">10dp</dimen>
+    <dimen name="base_setting_hight">55dp</dimen>
+    <dimen name="base_setting_textSize">20sp</dimen>
+    <dimen name="fontsize">20sp</dimen>
+    <dimen name="detailtrans_topic_fontsize">16sp</dimen>
+    <dimen name="detailtrans_content_fontsize">15sp</dimen>
+
+    <dimen name="app_titilfont_textSize">25sp</dimen>
+    <!--二级菜单参数-->
+    <dimen name="secorend_marginLeft">40dp</dimen>
+</resources>

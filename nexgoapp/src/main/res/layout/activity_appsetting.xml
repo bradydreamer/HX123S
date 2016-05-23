@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <include layout="@layout/baselayout_appsetting"
+        android:id="@+id/include_merchant_id_setting"
+        />
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_transaction_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_systemparams_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_communication_params_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_terminal_keys_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_keyword_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_others_management"/>
+    <include layout="@layout/baselayout_appsetting"
+             android:id="@+id/include_electronic_signature_management"/>
+
+</LinearLayout>
